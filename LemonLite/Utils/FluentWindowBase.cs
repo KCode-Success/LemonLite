@@ -1,5 +1,4 @@
 ﻿using System.Windows;
-using EleCho.WpfSuite;
 using LemonLite.Behaviors;
 using Microsoft.Xaml.Behaviors;
 using System.Windows.Shell;
@@ -9,6 +8,7 @@ using System.Windows.Media;
 using FluentWpfCore.Interop;
 using FluentWpfCore.AttachedProperties;
 using System;
+using System.Windows.Controls;
 
 namespace LemonLite.Utils;
 
@@ -17,7 +17,8 @@ namespace LemonLite.Utils;
 /// </summary>
 public class FluentWindowBase : Window
 {
-    private wsButton? CloseBtn, MaxmizeBtn, MinimizeBtn;
+    private wsButton? CloseBtn, MaximizeBtn, MinimizeBtn;
+    protected Grid? PART_TitleBar;
     private readonly BehaviorCollection _behaviors;
     private readonly BlurWindowBehavior _blurBehavior;
     private readonly WindowChrome _windowChrome;
@@ -31,6 +32,11 @@ public class FluentWindowBase : Window
         set => _blurBehavior.SetCurrentValue(BlurWindowBehavior.ModeProperty, value);
     }
 
+    public bool IsToolWindow
+    {
+        get => _blurBehavior.IsToolWindow;
+        set => _blurBehavior.IsToolWindow = value;
+    }
 
     public FluentWindowBase()
     {
@@ -40,7 +46,7 @@ public class FluentWindowBase : Window
         var windows11 = new Version(10, 0, 22621);
         if (osVersion >= windows11)
         {
-            WindowOption.SetCorner(this, WindowCorner.Round);
+            WindowMaterial.SetWindowCorner(this, MaterialApis.WindowCorner.Round);
             DwmAnimation.SetEnableDwmAnimation(this, true);
         }
 
@@ -69,14 +75,16 @@ public class FluentWindowBase : Window
         base.OnApplyTemplate();
 
         CloseBtn = (wsButton)Template.FindName("CloseBtn", this);
-        MaxmizeBtn = (wsButton)Template.FindName("MaxmizeBtn", this);
+        MaximizeBtn = (wsButton)Template.FindName("MaximizeBtn", this);
         MinimizeBtn = (wsButton)Template.FindName("MinimizeBtn", this);
 
-        if (CloseBtn == null || MaxmizeBtn == null || MinimizeBtn == null)
+        PART_TitleBar = (Grid)Template.FindName("PART_TitleBar",this);
+
+        if (CloseBtn == null || MaximizeBtn == null || MinimizeBtn == null)
             throw new NullReferenceException("!!!");
 
         CloseBtn.Click += CloseBtn_Click;
-        MaxmizeBtn.Click += MaxmizeBtn_Click;
+        MaximizeBtn.Click += MaximizeBtn_Click;
         MinimizeBtn.Click += MinimizeBtn_Click;
 
         //接管ResizeMode属性
@@ -87,9 +95,9 @@ public class FluentWindowBase : Window
     private void ApplyResizeMode()
     {
         bool allShown = ResizeMode != ResizeMode.NoResize;
-        MinimizeBtn!.Visibility = MaxmizeBtn!.Visibility = allShown ? Visibility.Visible : Visibility.Collapsed;
-        MaxmizeBtn.IsEnabled = ResizeMode != ResizeMode.CanMinimize;
-        MaxmizeBtn.SetResourceReference(ForegroundProperty, MaxmizeBtn.IsEnabled ? "ForeColor" : "FocusMaskColor");
+        MinimizeBtn!.Visibility = MaximizeBtn!.Visibility = allShown ? Visibility.Visible : Visibility.Collapsed;
+        MaximizeBtn.IsEnabled = ResizeMode != ResizeMode.CanMinimize;
+        MaximizeBtn.SetResourceReference(ForegroundProperty, MaximizeBtn.IsEnabled ? "ForeColor" : "FocusMaskColor");
         CloseBtn!.MouseEnter += CloseBtn_MouseEnter;
         CloseBtn!.MouseLeave += FluentWindowBase_MouseLeave;
 
@@ -116,7 +124,7 @@ public class FluentWindowBase : Window
 
     public bool ExitOnCloseBtnClicked { get; set; } = true;
 
-    private void CloseBtn_Click(object sender, RoutedEventArgs e)
+    protected virtual void CloseBtn_Click(object sender, RoutedEventArgs e)
     {
         if (ExitOnCloseBtnClicked)
             Close();
@@ -125,12 +133,12 @@ public class FluentWindowBase : Window
         }
     }
 
-    private void MaxmizeBtn_Click(object sender, RoutedEventArgs e)
+    protected virtual void MaximizeBtn_Click(object sender, RoutedEventArgs e)
     {
         WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;          
     }
 
-    private void MinimizeBtn_Click(object sender, RoutedEventArgs e)
+    protected  void MinimizeBtn_Click(object sender, RoutedEventArgs e)
     {
         WindowState = WindowState.Minimized;
     }

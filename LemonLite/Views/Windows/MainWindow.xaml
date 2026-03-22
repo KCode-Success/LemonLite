@@ -1,56 +1,53 @@
-<Window x:Class="LemonLite.Views.Windows.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:behavior="clr-namespace:LemonLite.Behaviors"
-        xmlns:converters="clr-namespace:LemonLite.Converters"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:fluent="https://github.com/TwilightLemon/FluentWpfCore"
-        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
-        xmlns:loc="clr-namespace:LemonLite.Services"
-        xmlns:local="clr-namespace:LemonLite.Views.Windows"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:uc="clr-namespace:LemonLite.Views.UserControls"
-        xmlns:vm="clr-namespace:LemonLite.ViewModels"
-        xmlns:ws="https://schemas.elecho.dev/wpfsuite"
-        x:Name="window"
-        Title="Lemon Lite"
-        Width="874"
-        Height="504"
-        MinWidth="300"
-        MinHeight="300"
-        d:DataContext="{d:DesignInstance vm:MainWindowViewModel}"
-        fluent:WindowMaterial.WindowCorner="Round"
-        Background="Transparent"
-        FontFamily="{DynamicResource DefaultFontFamily}"
-        Foreground="{DynamicResource ForeColor}"
-        mc:Ignorable="d">
-    <Window.Resources>
-        <WindowChrome x:Key="windowChrome"
-                      CaptionHeight="24"
-                      ResizeBorderThickness="4" />
-    </Window.Resources>
-    <fluent:WindowMaterial.Material>
-        <fluent:WindowMaterial x:Name="material"
-                               MaterialMode="Acrylic"
-                               UseWindowComposition="True"
-                               WindowChromeEx="{StaticResource windowChrome}" />
-    </fluent:WindowMaterial.Material>
-    <i:Interaction.Behaviors>
-        <behavior:WindowDragMoveBehavior />
-    </i:Interaction.Behaviors>
+<ut:FluentWindowBase x:Class="LemonLite.Views.Windows.MainWindow"
+                     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                     xmlns:behavior="clr-namespace:LemonLite.Behaviors"
+                     xmlns:converters="clr-namespace:LemonLite.Converters"
+                     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                     xmlns:fluent="https://github.com/TwilightLemon/FluentWpfCore"
+                     xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+                     xmlns:loc="clr-namespace:LemonLite.Services"
+                     xmlns:local="clr-namespace:LemonLite.Views.Windows"
+                     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                     xmlns:uc="clr-namespace:LemonLite.Views.UserControls"
+                     xmlns:ut="clr-namespace:LemonLite.Utils"
+                     xmlns:vm="clr-namespace:LemonLite.ViewModels"
+                     xmlns:ws="https://schemas.elecho.dev/wpfsuite"
+                     x:Name="window"
+                     Title="Lemon Lite"
+                     Width="874"
+                     Height="504"
+                     MinWidth="300"
+                     MinHeight="300"
+                     d:DataContext="{d:DesignInstance vm:MainWindowViewModel}"
+                     fluent:WindowMaterial.WindowCorner="Round"
+                     Background="Transparent"
+                     FontFamily="{DynamicResource DefaultFontFamily}"
+                     Foreground="{DynamicResource ForeColor}"
+                     IsToolWindow="True"
+                     Mode="Acrylic"
+                     mc:Ignorable="d">
     <ws:BoxPanel>
         <!--  Image Background  -->
         <Border x:Name="ImageBackground" />
-        <Border x:Name="AnimatedBackgroundBd" Opacity="0.86">
+        <Border x:Name="AnimatedBackgroundBd"
+                Opacity="0.86">
             <Border.Background>
-                <ImageBrush ImageSource="{Binding BackgroundImageSource, Mode=OneWay}" Stretch="UniformToFill">
+                <ImageBrush ImageSource="{Binding BackgroundImageSource, Mode=OneWay}"
+                            Stretch="UniformToFill">
                     <ImageBrush.RelativeTransform>
                         <TransformGroup>
                             <TranslateTransform Y="0.5" />
-                            <ScaleTransform CenterX="0.5" CenterY="1" ScaleX="2.4" ScaleY="2.4" />
-                            <RotateTransform Angle="0" CenterX="0.5" CenterY="1">
+                            <ScaleTransform CenterX="0.5"
+                                            CenterY="1"
+                                            ScaleX="2.4"
+                                            ScaleY="2.4" />
+                            <RotateTransform Angle="0"
+                                             CenterX="0.5"
+                                             CenterY="1">
                                 <i:Interaction.Behaviors>
-                                    <behavior:RotateWithPlayingStateBehavior IsEnabled="{Binding IsBackgroundValid}" IsPlaying="{Binding IsPlaying}" />
+                                    <behavior:RotateWithPlayingStateBehavior IsEnabled="{Binding IsBackgroundValid}"
+                                                                             IsPlaying="{Binding IsPlaying}" />
                                 </i:Interaction.Behaviors>
                             </RotateTransform>
                         </TransformGroup>
@@ -58,24 +55,30 @@
                 </ImageBrush>
             </Border.Background>
             <i:Interaction.Behaviors>
-                <behavior:FadeBorderBehavior Source="{Binding BackgroundImageSource}" Duration="00:00:1.5" />
+                <behavior:FadeBorderBehavior Source="{Binding BackgroundImageSource}"
+                                             Duration="00:00:1.5" />
             </i:Interaction.Behaviors>
         </Border>
 
         <Grid x:Name="RootGrid">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition x:Name="LeftColumn" Width="6*" />
-                <ColumnDefinition x:Name="RightColumn" Width="7*" />
+                <ColumnDefinition x:Name="LeftColumn"
+                                  Width="6*" />
+                <ColumnDefinition x:Name="RightColumn"
+                                  Width="7*" />
             </Grid.ColumnDefinitions>
-            <!--  歌曲信息容器  -->
             <Grid x:Name="SongInfoPanel">
                 <Grid.RowDefinitions>
-                    <RowDefinition x:Name="CoverRow" Height="3*" />
-                    <RowDefinition x:Name="InfoRow" Height="2*" />
+                    <RowDefinition x:Name="CoverRow"
+                                   Height="3*" />
+                    <RowDefinition x:Name="InfoRow"
+                                   Height="2*" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition x:Name="CoverCol" Width="*" />
-                    <ColumnDefinition x:Name="InfoCol" Width="0" />
+                    <ColumnDefinition x:Name="CoverCol"
+                                      Width="*" />
+                    <ColumnDefinition x:Name="InfoCol"
+                                      Width="0" />
                 </Grid.ColumnDefinitions>
 
                 <!--  封面区域  -->
@@ -93,12 +96,15 @@
                             CornerRadius="12"
                             RenderOptions.BitmapScalingMode="HighQuality">
                         <i:Interaction.Behaviors>
-                            <behavior:FadeBorderBehavior Brush="{Binding CoverImage, TargetNullValue={StaticResource HighlightThemeColor}}" Duration="00:00:1" />
+                            <behavior:FadeBorderBehavior Brush="{Binding CoverImage, TargetNullValue={StaticResource HighlightThemeColor}}"
+                                                         Duration="00:00:1" />
                         </i:Interaction.Behaviors>
                         <Border.Width>
                             <MultiBinding Converter="{x:Static converters:MinValueConverter.Instance}">
-                                <Binding ElementName="LyricPage_ImgEdge" Path="ActualWidth" />
-                                <Binding ElementName="LyricPage_ImgEdge" Path="ActualHeight" />
+                                <Binding ElementName="LyricPage_ImgEdge"
+                                         Path="ActualWidth" />
+                                <Binding ElementName="LyricPage_ImgEdge"
+                                         Path="ActualHeight" />
                             </MultiBinding>
                         </Border.Width>
                         <Border.Effect>
@@ -148,8 +154,10 @@
                                            TextWrapping="Wrap">
                         <uc:HighlightTextBlock.Text>
                             <MultiBinding StringFormat="{}{0} · {1}">
-                                <Binding Mode="OneWay" Path="Artist" />
-                                <Binding Mode="OneWay" Path="Album" />
+                                <Binding Mode="OneWay"
+                                         Path="Artist" />
+                                <Binding Mode="OneWay"
+                                         Path="Album" />
                             </MultiBinding>
                         </uc:HighlightTextBlock.Text>
                     </uc:HighlightTextBlock>
@@ -226,11 +234,15 @@
                     Margin="10,20,80,20"
                     d:Background="White">
                 <Border.OpacityMask>
-                    <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                    <LinearGradientBrush StartPoint="0.5,0"
+                                         EndPoint="0.5,1">
                         <GradientStop Color="Transparent" />
-                        <GradientStop Offset="1" Color="Transparent" />
-                        <GradientStop Offset="0.2" Color="Black" />
-                        <GradientStop Offset="0.8" Color="Black" />
+                        <GradientStop Offset="1"
+                                      Color="Transparent" />
+                        <GradientStop Offset="0.2"
+                                      Color="Black" />
+                        <GradientStop Offset="0.8"
+                                      Color="Black" />
                     </LinearGradientBrush>
                 </Border.OpacityMask>
             </Border>
@@ -306,6 +318,24 @@
                     </ws:Button>
                 </StackPanel>
             </Border>
+            <ws:Button x:Name="SwitchMiniModeBtn"
+                       Grid.Column="1"
+                       Margin="0 0 144 0"
+                       Width="48"
+                       Height="48"
+                       HorizontalAlignment="Right"
+                       VerticalAlignment="Top"
+                       Background="Transparent"
+                       BorderThickness="0"
+                       Content="&#xE73F;"
+                       Cursor="Hand"
+                       FontFamily="{DynamicResource SegoeFluentIcon}"
+                       FontSize="10"
+                       Click="SwitchMiniModeBtn_Click"
+                       Foreground="{DynamicResource ForeColor}"
+                       HoverBackground="{DynamicResource MaskColor}"
+                       PressedBackground="{DynamicResource FocusMaskColor}"
+                       WindowChrome.IsHitTestVisibleInChrome="True" />
         </Grid>
     </ws:BoxPanel>
-</Window>
+</ut:FluentWindowBase>

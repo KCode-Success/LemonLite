@@ -132,7 +132,7 @@ public class NotifyIconService(AppSettingService appSettingService, UIResourceSe
         _contextMenu.Items.Add(_exitMenuItem);
 
         _notifyIcon.ContextMenu = _contextMenu;
-        _notifyIcon.ContextMenuOpening += NotifyIcon_ContextMenuOpening;
+        _notifyIcon.PreviewTrayContextMenuOpen += _notifyIcon_PreviewTrayContextMenuOpen;
         _notifyIcon.ForceCreate();
 
         // 初始应用当前主题颜色
@@ -144,16 +144,16 @@ public class NotifyIconService(AppSettingService appSettingService, UIResourceSe
         LocalizationService.Instance.LanguageChanged += OnLanguageChanged;
     }
 
-    private void NotifyIcon_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+    private void _notifyIcon_PreviewTrayContextMenuOpen(object sender, RoutedEventArgs e)
     {
         //update menu items
         if (_openMainLrcWindowMenuItem != null)
             _openMainLrcWindowMenuItem.IsChecked = opt.Data.StartWithMainWindow;
-        if(_desktopLrcMenuItem!= null)
+        if (_desktopLrcMenuItem != null)
             _desktopLrcMenuItem.IsChecked = opt.Data.StartWithDesktopLyric;
-        if(_embeddedWindowMenuItem != null)
+        if (_embeddedWindowMenuItem != null)
             _embeddedWindowMenuItem.IsChecked = opt.Data.StartWithEmbeddedWindow;
-        if(_audioVisualizerMenuItem!= null)
+        if (_audioVisualizerMenuItem != null)
             _audioVisualizerMenuItem.IsChecked = opt.Data.EnableAudioVisualizer;
     }
 
@@ -213,7 +213,7 @@ public class NotifyIconService(AppSettingService appSettingService, UIResourceSe
         LocalizationService.Instance.LanguageChanged -= OnLanguageChanged;
         if (_notifyIcon != null)
         {
-            _notifyIcon.ContextMenuOpening -= NotifyIcon_ContextMenuOpening;
+            _notifyIcon.PreviewTrayContextMenuOpen -= _notifyIcon_PreviewTrayContextMenuOpen;
             _notifyIcon.Dispose();
         }
         _messageWindow?.Close();

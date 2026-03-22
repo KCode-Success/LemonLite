@@ -20,7 +20,7 @@ namespace LemonLite.Views.Windows;
 /// <summary>
 /// Interaction logic for MainWindow.xaml
 /// </summary>
-public partial class MainWindow : Window
+public partial class MainWindow : FluentWindowBase
 {
     private const string WindowName = nameof(MainWindow);
     private readonly MainWindowViewModel vm;
@@ -103,9 +103,7 @@ public partial class MainWindow : Window
         //Background Type
         if (_mgr.Data.Background == Appearance.BackgroundType.Acrylic)
         {
-            material.MaterialMode = MaterialType.Acrylic;
-            material.CompositonColor = ui.GetIsDarkMode() ? Color.FromArgb(0x01, 0, 0, 0) : Color.FromArgb(0x01, 0xff, 0xff, 0xff);
-            material.UseWindowComposition = true;
+            Mode = MaterialType.Acrylic;
             AnimatedBackgroundBd.Visibility = Visibility.Visible;
             AnimatedBackgroundBd.Opacity = _mgr.Data.AcylicOpacity;
             Background = Brushes.Transparent;
@@ -115,8 +113,7 @@ public partial class MainWindow : Window
         {
             if (!string.IsNullOrEmpty(_mgr.Data.BackgroundImagePath))
             {
-                material.MaterialMode = MaterialType.None;
-                material.UseWindowComposition = false;
+                Mode = MaterialType.None;
                 AnimatedBackgroundBd.Visibility = Visibility.Collapsed;
                 SetResourceReference(BackgroundProperty, "BackgroundColor");
                 ImageBackground.Opacity = _mgr.Data.BackgroundOpacity;
@@ -127,8 +124,7 @@ public partial class MainWindow : Window
         {
             AnimatedBackgroundBd.Visibility = Visibility.Visible;
             AnimatedBackgroundBd.Opacity = 1;
-            material.MaterialMode = MaterialType.None;
-            material.UseWindowComposition = false;
+            Mode = MaterialType.None;
             SetResourceReference(BackgroundProperty, "BackgroundColor");
             ImageBackground.Background = null;
         }
@@ -204,6 +200,10 @@ public partial class MainWindow : Window
 
     private void SwitchToMobileLayout()
     {
+        if (PART_TitleBar != null)
+            PART_TitleBar.Visibility = Visibility.Collapsed;
+        SwitchMiniModeBtn.Visibility= Visibility.Collapsed;
+
         // 设置RootGrid为2行布局：顶部歌曲信息、中间歌词
         RootGrid.RowDefinitions.Clear();
         RootGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
@@ -317,6 +317,10 @@ public partial class MainWindow : Window
 
     private void SwitchToDesktopLayout()
     {
+        if (PART_TitleBar != null)
+            PART_TitleBar.Visibility = Visibility.Visible;
+        SwitchMiniModeBtn.Visibility = Visibility.Visible;
+
         // 清除行定义，恢复为单行布局
         RootGrid.RowDefinitions.Clear();
 
@@ -404,5 +408,24 @@ public partial class MainWindow : Window
     private void SwitchTopMostBtn_Click(object sender, RoutedEventArgs e)
     {
         _mgr.Data.TopMost = Topmost;
+    }
+
+    protected override void CloseBtn_Click(object sender, RoutedEventArgs e)
+    {
+        var smtc = App.Services.GetRequiredService<SmtcService>();
+        var opt = App.Services.GetRequiredService<AppSettingService>().GetConfigMgr<AppOption>();
+        opt.Data.StartWithMainWindow = false;
+        if (smtc.IsSessionValid)
+        {
+            App.WindowManager.SetWindowState<MainWindow>(opt.Data.StartWithMainWindow);
+        }
+    }
+
+    private void SwitchMiniModeBtn_Click(object sender, RoutedEventArgs e)
+    {
+        this.Left = 20;
+        this.Top = SystemParameters.WorkArea.Height - 480;
+        this.Width = 300;
+        this.Height = 440;
     }
 }

@@ -10,7 +10,9 @@
                 <ControlTemplate TargetType="{x:Type Window}">
                     <Grid Background="{TemplateBinding Background}">
                         <ContentPresenter />
-                        <Grid Height="48" VerticalAlignment="Top">
+                        <Grid x:Name="PART_TitleBar"
+                              Height="48"
+                              VerticalAlignment="Top">
                             <ws:Button x:Name="CloseBtn"
                                        Width="48"
                                        Height="48"
@@ -26,7 +28,7 @@
                                        HoverBackground="#FFE32820"
                                        PressedBackground="#FFEF1E15"
                                        WindowChrome.IsHitTestVisibleInChrome="True" />
-                            <ws:Button x:Name="MaxmizeBtn"
+                            <ws:Button x:Name="MaximizeBtn"
                                        Width="48"
                                        Height="48"
                                        Margin="0,0,48,0"

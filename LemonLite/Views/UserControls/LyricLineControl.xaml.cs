@@ -24,6 +24,7 @@ public partial class LyricLineControl : UserControl
     private int EmphasisThreshold = 1800; // 高亮抬起分词的阈值ms,在LoadMainLrc时会重新计算
     private int ActiveLrcLiftupHeight => (int)(-FontSize / 4);
     private double AverageWordDuration = 0.0;
+    private double LiftUpAniDuration = 0.0;
     public SyllableLineInfo? RomajiSyllables { get; private set; }
     public ILineInfo? MainLineInfo { get; private set; }
     public Dictionary<ISyllableInfo, HighlightTextBlock> MainSyllableLrcs => mainSyllableLrcs;
@@ -98,6 +99,7 @@ public partial class LyricLineControl : UserControl
         if (words.Count == 0) return;
         //计算EmphasisThreshold
         var aver = AverageWordDuration = words.Average(w => w.Duration);
+        LiftUpAniDuration = Math.Max(187, aver * 1.5);
         if (aver > 0)
         {
             EmphasisThreshold = (int)(aver * 2);
@@ -167,7 +169,7 @@ public partial class LyricLineControl : UserControl
                     if (textBlock.RenderTransform is TranslateTransform trans && !trans.HasAnimatedProperties)
                     {
                         trans.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(0, ActiveLrcLiftupHeight,
-                                    TimeSpan.FromMilliseconds(AverageWordDuration * 1.5))
+                                    TimeSpan.FromMilliseconds(LiftUpAniDuration))
                         {
                             EasingFunction = new ExponentialEase()
                         });
@@ -202,7 +204,7 @@ public partial class LyricLineControl : UserControl
                         mainSyllableAnimated[syllable] = true;
 
                         var liftupAni = new DoubleAnimation(0, ActiveLrcLiftupHeight,
-                                    TimeSpan.FromMilliseconds(AverageWordDuration * 1.5))
+                                    TimeSpan.FromMilliseconds(LiftUpAniDuration))
                         {
                             EasingFunction = new ExponentialEase()
                         };
