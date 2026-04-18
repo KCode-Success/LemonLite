@@ -333,7 +333,6 @@ public class SmtcListener(GlobalSystemMediaTransportControlsSessionManager mgr)
     {
         var raw = await GetMediaInfoAsync();
         if (raw == null) return null;
-
         var info = new SmtcMediaInfo
         {
             PlaybackType = raw.PlaybackType,
@@ -343,13 +342,17 @@ public class SmtcListener(GlobalSystemMediaTransportControlsSessionManager mgr)
         };
 
         var appId = GetAppMediaId()?.ToLower() ?? "";
+        bool isValid = true;
         foreach (var processor in SmtcMetadataProcessorPipeline.All)
         {
             if (processor.CanProcess(appId))
-                processor.Process(info, appId);
+            {
+                if (isValid = processor.IsValid(info))
+                    processor.Process(info, appId);
+            }
         }
 
-        return info;
+        return isValid ? info : null;
     }
 
     public GlobalSystemMediaTransportControlsSessionPlaybackStatus? GetPlaybackStatus()

@@ -2,6 +2,7 @@ using LemonLite.Configs;
 using LemonLite.Entities;
 using LemonLite.Utils;
 using Lyricify.Lyrics.Models;
+using Lyricify.Lyrics.Searchers.Helpers;
 using System;
 using System.Diagnostics;
 using System.Threading;
@@ -153,10 +154,13 @@ public class LyricService
             var sources = _appOption.Data.GetSearchSources(mediaId);
 
             //retry with or without Album or duration metadata.
-            var searchResult = await LyricHelper.SearchMusicAsync(info.Title, info.Artist, info.Album, durationMs, sources)
-                ?? await LyricHelper.SearchMusicAsync(info.Title, info.Artist, info.Album, null, sources)
-                ?? await LyricHelper.SearchMusicAsync(info.Title, info.Artist, null, durationMs, sources)
-                ?? await LyricHelper.SearchMusicAsync(info.Title, info.Artist, null, null, sources);
+            var searchResult = await LyricHelper.SearchMusicAsync(info.Title, info.Artist, info.Album, durationMs, sources, CompareHelper.MatchType.PrettyHigh, cancellationToken);
+            if (cancellationToken.IsCancellationRequested) return;
+            searchResult ??= await LyricHelper.SearchMusicAsync(info.Title, info.Artist, info.Album, null, sources, CompareHelper.MatchType.Medium, cancellationToken);
+            if (cancellationToken.IsCancellationRequested) return;
+            searchResult ??= await LyricHelper.SearchMusicAsync(info.Title, info.Artist, null, durationMs, sources, CompareHelper.MatchType.Medium, cancellationToken);
+            if (cancellationToken.IsCancellationRequested) return;
+            searchResult ??= await LyricHelper.SearchMusicAsync(info.Title, info.Artist, null, null, sources, CompareHelper.MatchType.Medium, cancellationToken);
 
             if (searchResult is { Id: not null } musicMetaData)
             {
@@ -185,7 +189,9 @@ public class LyricService
                 await LoadLyricByIdAsync(musicMetaData.Id, source!, cancellationToken);
             }
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException) {
+        
+        }
     }
 
     /// <summary>

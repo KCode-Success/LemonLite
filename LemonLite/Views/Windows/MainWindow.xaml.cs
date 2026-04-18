@@ -289,6 +289,8 @@ public partial class MainWindow : FluentWindowBase
         LyricToolBar.Height = 36;
         LyricToolBar.Width = double.NaN;
         LyricToolBar.Visibility = Visibility.Collapsed;
+
+        WindowCaptionHeight = 1;
     }
 
     private void MainWindow_MouseLeave(object sender, MouseEventArgs e)
@@ -403,6 +405,8 @@ public partial class MainWindow : FluentWindowBase
         LyricToolBar.Height = double.NaN;
         LyricToolBar.Width = 36;
         LyricToolBar.Visibility = Visibility.Visible;
+
+        WindowCaptionHeight = DEFAULT_WINDOW_CAPTION_HEIGHT;
     }
 
     private void SwitchTopMostBtn_Click(object sender, RoutedEventArgs e)

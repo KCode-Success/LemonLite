@@ -16,6 +16,8 @@ public interface ISmtcMetadataProcessor
 
     /// <summary>Mutates <paramref name="info"/> in-place to normalize the metadata.</summary>
     void Process(SmtcMediaInfo info, string appId);
+
+    bool IsValid(SmtcMediaInfo info);
 }
 
 /// <summary>
@@ -58,10 +60,16 @@ internal sealed class AppleMusicMetadataProcessor : ISmtcMetadataProcessor
             info.Album  = parts[1];
         }
     }
+    public bool IsValid(SmtcMediaInfo info)
+    {
+        //apple music可能会将加载中\连接中等状态也放进SMTC里，此类metadata无效。
+        return !string.IsNullOrEmpty(info.Artist) && !string.IsNullOrEmpty(info.Title);
+    }
 }
 
 internal sealed partial class CommonArtistMetadataProcessor : ISmtcMetadataProcessor
 {
+    public bool IsValid(SmtcMediaInfo info) => true;
     public bool CanProcess(string appId) => true;
 
     public void Process(SmtcMediaInfo info, string appId)
@@ -83,6 +91,7 @@ internal sealed partial class CommonArtistMetadataProcessor : ISmtcMetadataProce
 
 internal sealed class NameAliaMetadataProcessor(SettingsMgr<SmtcMetadataAliasConfig> aliases) : ISmtcMetadataProcessor
 {
+    public bool IsValid(SmtcMediaInfo info) => true;
     public bool CanProcess(string appId)
     {
         return aliases.Data.ContainsKey(appId);

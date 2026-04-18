@@ -23,7 +23,7 @@ public class FluentWindowBase : Window
     private readonly BlurWindowBehavior _blurBehavior;
     private readonly WindowChrome _windowChrome;
 
-    private readonly int _captionHeight = 48;
+    public const int DEFAULT_WINDOW_CAPTION_HEIGHT = 48;
     private Thickness _resizeBorderThickness = new(6);
 
     public MaterialType Mode
@@ -54,7 +54,7 @@ public class FluentWindowBase : Window
         _behaviors.Add(new WindowDragMoveBehavior());
         _windowChrome = new()
         {
-            CaptionHeight = _captionHeight,
+            CaptionHeight = DEFAULT_WINDOW_CAPTION_HEIGHT,
             ResizeBorderThickness = _resizeBorderThickness
         };
         _blurBehavior = new()
@@ -68,6 +68,12 @@ public class FluentWindowBase : Window
     {
         _behaviors.Clear();
         base.OnClosed(e);
+    }
+
+    public double WindowCaptionHeight
+    {
+        get => _windowChrome.CaptionHeight;
+        set => _windowChrome.CaptionHeight = value;
     }
 
     public override void OnApplyTemplate()

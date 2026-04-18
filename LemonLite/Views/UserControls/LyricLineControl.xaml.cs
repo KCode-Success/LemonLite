@@ -74,7 +74,7 @@ public partial class LyricLineControl : UserControl
             FontSize = fontSize,
             HighlightPos = InitialHighlightPos
         };
-        //tb.SetResourceReference(ForegroundProperty, "InActiveLrcForeground");
+        tb.SetResourceReference(HighlightTextBlock.HighlightColorProperty, "ActiveLrcForegroundColor");
         MainLrcContainer.Children.Add(tb);
         _isPlainLrc = true;
     }
