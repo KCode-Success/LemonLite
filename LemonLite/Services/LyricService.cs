@@ -122,7 +122,7 @@ public class LyricService
     /// <summary>
     /// 从当前SMTC媒体加载歌词
     /// </summary>
-    private async Task LoadLyricFromCurrentMediaAsync()
+    public async Task LoadLyricFromCurrentMediaAsync()
     {
         if (await _smtcService.SmtcListener.GetNormalizedMediaInfoAsync() is not { PlaybackType: Windows.Media.MediaPlaybackType.Music } info) return;
         if (string.IsNullOrEmpty(info.Title)) return;
@@ -236,6 +236,7 @@ public class LyricService
     {
         _smtcSource = null;
         _currentMusicMetaData = null;
+        _currentMusicInfo = null;
         _currentLyric = null;
         _currentTrans = null;
         _currentRomaji = null;

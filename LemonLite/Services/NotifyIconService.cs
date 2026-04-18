@@ -113,11 +113,11 @@ public class NotifyIconService(AppSettingService appSettingService, UIResourceSe
         };
 
         _refreshMenuItem = new MenuItem { Header = LocalizationService.Instance["RefreshLyrics"] };
-        _refreshMenuItem.Click += async (s, e) =>
+        _refreshMenuItem.Click += (s, e) =>
         {
-            var smtc = App.Services.GetRequiredService<SmtcService>();
-            await smtc.StopAsync(default).ContinueWith(_ => smtc.StartAsync(default));
-            App.Current.Dispatcher.Invoke(App.ApplyAppOptions);
+            var lyricService = App.Services.GetRequiredService<LyricService>();
+            lyricService.Reset();
+            _= lyricService.LoadLyricFromCurrentMediaAsync();
         };
 
         _exitMenuItem = new MenuItem { Header = LocalizationService.Instance["Exit"] };
