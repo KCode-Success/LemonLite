@@ -60,7 +60,9 @@ public static class TencGetLyric
             }
             catch
             {
-                continue;
+                if (text.StartsWith('['))
+                    decompressText = text;
+                else continue;
             }
 
             var s = "";
