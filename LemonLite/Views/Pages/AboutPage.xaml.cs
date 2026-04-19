@@ -68,7 +68,7 @@ namespace LemonLite.Views.Pages
             new OpenSourceComponent
             {
                 Name = "FluentWpfCore",
-                Version = "1.0.3",
+                Version = "1.0.4",
                 License = "MIT",
                 Url = "https://github.com/TwilightLemon/FluentWpfCore"
             },
