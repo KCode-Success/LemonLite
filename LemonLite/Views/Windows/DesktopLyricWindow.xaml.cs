@@ -54,7 +54,7 @@ namespace LemonLite.Views.Windows
             {
                 if (!_isIslandInfoOpen)
                     HideLyricAnimation(callback);
-                else callback();
+                else callback(false);
             };
             vm.ShowLineAnimation = ShowLyricAnimation;
 
@@ -265,7 +265,7 @@ namespace LemonLite.Views.Windows
             windowRoot.RenderTransformOrigin = new Point(0.5, 0);
             return (scale, translate);
         }
-        private void HideLyricAnimation(Action callback)
+        private void HideLyricAnimation(Action<bool> callback)
         {
             if (_isHideShowAnimationActive)
                 return;
@@ -300,7 +300,7 @@ namespace LemonLite.Views.Windows
                     {
                         LrcScrollViewer.BeginAnimation(ScrollViewerUtils.HorizontalOffsetProperty, null);
                         ScrollViewerUtils.SetHorizontalOffset(LrcScrollViewer, 0);
-                        callback?.Invoke();
+                        callback?.Invoke(true);
                     };
                     sb.Begin();
                 }
@@ -314,7 +314,7 @@ namespace LemonLite.Views.Windows
             {
                 LrcScrollViewer.BeginAnimation(ScrollViewerUtils.HorizontalOffsetProperty, null);
                 ScrollViewerUtils.SetHorizontalOffset(LrcScrollViewer, 0);
-                callback?.Invoke();
+                callback?.Invoke(true);
             };
             blur.BeginAnimation(BlurEffect.RadiusProperty, anim);
         }
@@ -433,7 +433,7 @@ namespace LemonLite.Views.Windows
             {
                 if (_hasLyricSource)
                 {
-                    HideLyricAnimation(() =>
+                    HideLyricAnimation((_) =>
                     {
                         LrcPanel.Visibility = Visibility.Visible;
                         InfoPanel.Visibility = Visibility.Collapsed;

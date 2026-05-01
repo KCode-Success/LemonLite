@@ -128,7 +128,7 @@ public partial class DesktopLyricWindowViewModel : ObservableObject
         LyricControl.Dispatcher.Invoke(ApplySettings);
     }
 
-    public Action<Action>? HideLineAnimation { get; set; }
+    public Action<Action<bool>>? HideLineAnimation { get; set; }
     public Action<int>? ShowLineAnimation { get; set; }
     public Action<FrameworkElement>? ScrollLrc { get; set; }
 
@@ -257,10 +257,10 @@ public partial class DesktopLyricWindowViewModel : ObservableObject
 
         _window?.SetHasLyricSource(true);
 
-        HideLineAnimation?.Invoke(()=> UpdateLineAfterHideAnimation(gap));
+        HideLineAnimation?.Invoke((allow)=> UpdateLineAfterHideAnimation(gap,allow));
     }
 
-    private void UpdateLineAfterHideAnimation(int gap)
+    private void UpdateLineAfterHideAnimation(int gap,bool allowCallShowAnimation)
     {
         var lrc = _lyricService.CurrentLine;
         if (lrc == null) return;
@@ -297,7 +297,8 @@ public partial class DesktopLyricWindowViewModel : ObservableObject
             (ShowRomaji && hasRomaji)
                 ? Visibility.Visible : Visibility.Collapsed;
 
-        ShowLineAnimation?.Invoke(gap);
+        if (allowCallShowAnimation)
+            ShowLineAnimation?.Invoke(gap);
     }
 
     [RelayCommand]
