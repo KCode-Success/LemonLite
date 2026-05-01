@@ -33,6 +33,7 @@ namespace LemonLite.Views.Windows
         private double _restoredHeight = 145d;
 
         private bool _hasLyricSource = false;
+        private bool _isHideShowAnimationActive = false;
 
         private const double IslandEmptyWidth = 170d;
         private const double IslandEmptyHeight = 32d;
@@ -49,7 +50,12 @@ namespace LemonLite.Views.Windows
             _settingsMgr = appSettingsService.GetConfigMgr<DesktopLyricOption>();
             _settingsMgr.OnDataChanged += SettingsMgr_OnDataChanged;
 
-            vm.HideLineAnimation = HideLyricAnimation;
+            vm.HideLineAnimation =(callback) =>
+            {
+                if (!_isIslandInfoOpen)
+                    HideLyricAnimation(callback);
+                else callback();
+            };
             vm.ShowLineAnimation = ShowLyricAnimation;
 
             vm.ScrollLrc = ScrollLrc;
@@ -186,6 +192,8 @@ namespace LemonLite.Views.Windows
             ApplyBackground();
 
             LrcHost.Visibility = Visibility.Visible;
+            LrcPanel.Visibility = Visibility.Visible;
+            InfoPanel.Visibility = Visibility.Collapsed;
             if (ShouldAddShadowEffect)
                 LrcPanel.Effect = shadowEffect;
 
@@ -210,7 +218,7 @@ namespace LemonLite.Views.Windows
         // 根据有无歌词切换 Island 的两种形态
         private void ApplyIslandSize()
         {
-            if (!_isIslandMode) return;
+            if (!_isIslandMode || _isIslandInfoOpen) return;
 
             if (!_hasLyricSource)
             {
@@ -223,7 +231,7 @@ namespace LemonLite.Views.Windows
             }
             else
             {
-                // 有歌词：宽度固定，高度跟随内容
+                // 有歌词：窗体宽度固定，高度跟随内容
                 this.SizeToContent = SizeToContent.Height;
                 LrcHost.Visibility = Visibility.Visible;
                 windowRoot.Width = double.NaN;
@@ -259,7 +267,12 @@ namespace LemonLite.Views.Windows
         }
         private void HideLyricAnimation(Action callback)
         {
-            if(_isIslandMode)
+            if (_isHideShowAnimationActive)
+                return;
+
+            _isHideShowAnimationActive = true;
+
+            if (_isIslandMode)
             {
                 if (!_isMouseIn && _settingsMgr.Data.UsePopupAnimation)
                 {
@@ -348,12 +361,13 @@ namespace LemonLite.Views.Windows
             LrcHost.Effect = blur;
             LrcHost.BeginAnimation(OpacityProperty, new DoubleAnimation(1, TimeSpan.FromMilliseconds(200)));
             var anim = new DoubleAnimation(0, TimeSpan.FromMilliseconds(200));
-            blur.BeginAnimation(BlurEffect.RadiusProperty, anim);
             anim.Completed += delegate
             {
                 LrcHost.BeginAnimation(OpacityProperty, null);
                 LrcHost.Effect = null;
+                _isHideShowAnimationActive = false;
             };
+            blur.BeginAnimation(BlurEffect.RadiusProperty, anim);
         }
 
         public void SetHasLyricSource(bool hasLyric)
@@ -407,16 +421,35 @@ namespace LemonLite.Views.Windows
             Left = (sc.Right - Width) / 2;
         }
 
+        bool _isIslandInfoOpen = false;
         private void DesktopLyricWindow_MouseLeave(object sender, MouseEventArgs e)
         {
             _isMouseIn = false;
-            if (_isIslandMode)
-            {
-                ApplyIslandSize();
-            }
             cancelShowFunc?.Cancel();
             cancelShowFunc = null;
             preShowFunc = false;
+
+            if (_isIslandMode && _isIslandInfoOpen)
+            {
+                if (_hasLyricSource)
+                {
+                    HideLyricAnimation(() =>
+                    {
+                        LrcPanel.Visibility = Visibility.Visible;
+                        InfoPanel.Visibility = Visibility.Collapsed;
+                        ApplyIslandSize();
+                        ShowLyricAnimation(0);
+                    });
+                }
+                else
+                {
+                    LrcPanel.Visibility = Visibility.Visible;
+                    InfoPanel.Visibility = Visibility.Collapsed;
+                    ApplyIslandSize();
+                }
+                _isIslandInfoOpen = false;
+            }
+
             if (ShouldAddShadowEffect)
                 LrcPanel.Effect = shadowEffect;
             else LrcPanel.Effect = null;
@@ -433,13 +466,6 @@ namespace LemonLite.Views.Windows
             _isMouseIn = true;
             if (_isIslandMode)
             {
-                //展开为完整长度
-                windowRoot.HorizontalAlignment = HorizontalAlignment.Stretch;
-                windowRoot.BeginAnimation(WidthProperty, null);
-                windowRoot.BeginAnimation(HeightProperty, null);
-                windowRoot.Width = double.NaN;
-                windowRoot.Height = double.NaN;
-
                 if (!_hasLyricSource)
                 {
                     // 无歌词：固定小胶囊
@@ -449,9 +475,9 @@ namespace LemonLite.Views.Windows
                     windowRoot.Height = IslandEmptyHeight;
                     windowRoot.VerticalAlignment = VerticalAlignment.Top;
                 }
-                return;
             }
 
+            //鼠标进入后300毫秒显示面板，期间如果鼠标离开则取消显示
             preShowFunc = true;
             cancelShowFunc ??= new();
             try
@@ -459,10 +485,55 @@ namespace LemonLite.Views.Windows
                 await Task.Delay(300, cancelShowFunc.Token);
                 if (preShowFunc)
                 {
-                    LrcPanel.BeginAnimation(OpacityProperty, new DoubleAnimation(1, 0.6, TimeSpan.FromMilliseconds(100)));
-                    LrcPanel.Effect = new BlurEffect() { Radius = 12 };
-                    FuncPanel.Visibility = Visibility.Visible;
-                    FuncPanel.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(180)));
+                    if (_isIslandMode)
+                    {
+                        if (!_hasLyricSource || _isIslandInfoOpen) return;
+                        _isIslandInfoOpen = true;
+                        double width=windowRoot.ActualWidth, height = windowRoot.ActualHeight;
+                        double targetWidth = this.ActualWidth;
+                        double targetHeight = 146d;//InfoPanel的高度
+
+                        var storyBoard= new Storyboard();
+                        var widthAnim = new DoubleAnimation(width, targetWidth, TimeSpan.FromMilliseconds(200))
+                        {
+                            EasingFunction = new CubicEase() { EasingMode = EasingMode.EaseOut }
+                        };
+                        var heightAnim = new DoubleAnimation(height, targetHeight, TimeSpan.FromMilliseconds(300))
+                        {
+                            EasingFunction = new BackEase() { EasingMode = EasingMode.EaseOut }
+                        };
+                        Storyboard.SetTarget(widthAnim, windowRoot);
+                        Storyboard.SetTargetProperty(widthAnim, new PropertyPath(WidthProperty));
+                        Storyboard.SetTarget(heightAnim, windowRoot);
+                        Storyboard.SetTargetProperty(heightAnim, new PropertyPath(HeightProperty));
+                        storyBoard.Children.Add(widthAnim);
+                        storyBoard.Children.Add(heightAnim);
+
+                        InfoPanel.Visibility = Visibility.Visible;
+                        InfoPanel.Opacity = 0;
+                        var opacityAni = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(300));
+                        Storyboard.SetTarget(opacityAni, InfoPanel);
+                        Storyboard.SetTargetProperty(opacityAni, new PropertyPath(OpacityProperty));
+                        storyBoard.Children.Add(opacityAni);
+
+                        storyBoard.Completed += delegate
+                        {
+                            windowRoot.HorizontalAlignment = HorizontalAlignment.Stretch;
+                            windowRoot.BeginAnimation(WidthProperty, null);
+                            windowRoot.BeginAnimation(HeightProperty, null);
+                            windowRoot.Width = double.NaN;
+                            windowRoot.Height = double.NaN;
+                        };
+                        storyBoard.Begin();
+                        LrcPanel.Visibility = Visibility.Collapsed;
+                    }
+                    else
+                    {
+                        LrcPanel.BeginAnimation(OpacityProperty, new DoubleAnimation(1, 0.6, TimeSpan.FromMilliseconds(100)));
+                        LrcPanel.Effect = new BlurEffect() { Radius = 12 };
+                        FuncPanel.Visibility = Visibility.Visible;
+                        FuncPanel.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(180)));
+                    }
                 }
             }
             catch { }

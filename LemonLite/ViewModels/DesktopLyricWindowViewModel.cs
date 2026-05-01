@@ -39,6 +39,7 @@ public partial class DesktopLyricWindowViewModel : ObservableObject
         _lyricService.CurrentLineEnded += OnCurrentLineChanged;
         _lyricService.TimeUpdated += OnTimeUpdated;
         _lyricService.MediaChanged += OnMediaChanged;
+        _lyricService.MediaMetaDataUpdated += LyricService_MediaMetaDataUpdated;
         smtcService.SmtcListener.SessionExited += SmtcListener_SessionExited;
 
         _smtcService.CoverUpdated += Smtc_CoverUpdated;
@@ -47,6 +48,19 @@ public partial class DesktopLyricWindowViewModel : ObservableObject
 
         ApplySettings();
         LyricControl.Dispatcher.BeginInvoke(()=> UpdateLrc(0));
+    }
+
+    private void LyricService_MediaMetaDataUpdated(MediaMetaDataUpdatedEventArgs info)
+    {
+        App.Current.Dispatcher.Invoke(() =>
+        {
+            if (!string.IsNullOrEmpty(info.Title) && !string.IsNullOrEmpty(info.Artist) && !string.IsNullOrEmpty(info.Album))
+            {
+                SongTitle = info.Title;
+                ArtistName = info.Artist;
+                AlbumName = info.Album;
+            }
+        });
     }
 
     private DesktopLyricWindow? _window;
@@ -65,6 +79,7 @@ public partial class DesktopLyricWindowViewModel : ObservableObject
         _lyricService.CurrentLineEnded -= OnCurrentLineChanged;
         _lyricService.TimeUpdated -= OnTimeUpdated;
         _lyricService.MediaChanged -= OnMediaChanged;
+        _lyricService.MediaMetaDataUpdated -= LyricService_MediaMetaDataUpdated;
         _smtcService.CoverUpdated -= Smtc_CoverUpdated;
         _smtcService.UpdateCoverFailed -= Smtc_UpdateCoverFailed;
         _uiResourceService.OnColorModeChanged -= OnColorModeChanged;
@@ -178,6 +193,10 @@ public partial class DesktopLyricWindowViewModel : ObservableObject
     [ObservableProperty] private ImageSource? backgroundImageSource;
     [ObservableProperty] private Visibility _backgroundVisibility = Visibility.Visible;
     [ObservableProperty] private bool _isBackgroundValid = false;
+    [ObservableProperty] private string _songTitle = "";
+    [ObservableProperty] private string _artistName = "";
+    [ObservableProperty] private string _albumName = "";
+
 
     partial void OnShowTranslationChanged(bool value)
     {
