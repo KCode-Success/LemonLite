@@ -47,7 +47,21 @@ public partial class DesktopLyricWindowViewModel : ObservableObject
         _uiResourceService.OnColorModeChanged += OnColorModeChanged;
 
         ApplySettings();
+        UpdateSmtcInfo();
         LyricControl.Dispatcher.BeginInvoke(()=> UpdateLrc(0));
+    }
+
+    private async void UpdateSmtcInfo()
+    {
+        if (await _smtcService.SmtcListener.GetNormalizedMediaInfoAsync() is { PlaybackType: Windows.Media.MediaPlaybackType.Music } info)
+        {
+            App.Current.Dispatcher.Invoke(() =>
+            {
+                SongTitle = info.Title ?? LemonLite.Services.LocalizationService.Instance["Welcome"];
+                ArtistName = info.Artist ?? string.Empty;
+                AlbumName = info.Album ?? string.Empty;
+            });
+        }
     }
 
     private void LyricService_MediaMetaDataUpdated(MediaMetaDataUpdatedEventArgs info)

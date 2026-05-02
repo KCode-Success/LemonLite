@@ -33,7 +33,6 @@ namespace LemonLite.Views.Windows
         private double _restoredHeight = 145d;
 
         private bool _hasLyricSource = false;
-        private bool _isHideShowAnimationActive = false;
 
         private const double IslandEmptyWidth = 170d;
         private const double IslandEmptyHeight = 32d;
@@ -268,11 +267,6 @@ namespace LemonLite.Views.Windows
         }
         private void HideLyricAnimation(Action<bool> callback)
         {
-            if (_isHideShowAnimationActive)
-                return;
-
-            _isHideShowAnimationActive = true;
-
             if (_isIslandMode)
             {
                 if (!_isMouseIn && _settingsMgr.Data.UsePopupAnimation)
@@ -366,7 +360,6 @@ namespace LemonLite.Views.Windows
             {
                 LrcHost.BeginAnimation(OpacityProperty, null);
                 LrcHost.Effect = null;
-                _isHideShowAnimationActive = false;
             };
             blur.BeginAnimation(BlurEffect.RadiusProperty, anim);
         }
