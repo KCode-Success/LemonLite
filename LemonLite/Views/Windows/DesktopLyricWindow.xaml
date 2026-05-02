@@ -7,6 +7,7 @@
         xmlns:loc="clr-namespace:LemonLite.Services"
         xmlns:local="clr-namespace:LemonLite.Views.Windows"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:uc="clr-namespace:LemonLite.Views.UserControls"
         xmlns:ut="clr-namespace:LemonLite.Utils"
         xmlns:vm="clr-namespace:LemonLite.ViewModels"
         xmlns:ws="https://schemas.elecho.dev/wpfsuite"
@@ -199,28 +200,35 @@
                         Background="{Binding CoverImage}"
                         CornerRadius="12"
                         RenderOptions.BitmapScalingMode="HighQuality" />
-                <TextBlock x:Name="TitleTb"
-                           Margin="96,32,20,0"
-                           VerticalAlignment="Top"
-                           d:Text="Hello"
-                           FontSize="14"
-                           FontWeight="SemiBold"
-                           Text="{Binding SongTitle}"
-                           TextTrimming="CharacterEllipsis" />
-                <TextBlock x:Name="ArtistTb"
-                           Margin="96,56,20,0"
-                           VerticalAlignment="Top"
-                           d:Text="hello hello"
-                           FontSize="12"
-                           Foreground="{DynamicResource HintForeColor}"
-                           TextTrimming="CharacterEllipsis">
-                    <TextBlock.Text>
+                <uc:HighlightTextBlock x:Name="TitleTb"
+                                       Margin="96,32,20,0"
+                                       VerticalAlignment="Top"
+                                       d:Text="Hello"
+                                       uc:HighlightTextBlock.HighlightIntensity="1"
+                                       FontSize="18"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource InActiveLrcForeground}"
+                                       HighlightColor="{DynamicResource ActiveLrcForegroundColor}"
+                                       HighlightPos="1"
+                                       Text="{Binding SongTitle}"
+                                       TextTrimming="CharacterEllipsis" />
+                <uc:HighlightTextBlock x:Name="ArtistTb"
+                                       Margin="96,56,20,0"
+                                       VerticalAlignment="Top"
+                                       d:Text="hello hello"
+                                       uc:HighlightTextBlock.HighlightIntensity="0.6"
+                                       FontSize="14"
+                                       Foreground="{DynamicResource InActiveLrcForeground}"
+                                       HighlightColor="{DynamicResource ActiveLrcForegroundColor}"
+                                       HighlightPos="1"
+                                       TextTrimming="CharacterEllipsis">
+                    <uc:HighlightTextBlock.Text>
                         <MultiBinding StringFormat="{}{0} · {1}">
                             <Binding Mode="OneWay" Path="ArtistName" />
                             <Binding Mode="OneWay" Path="AlbumName" />
                         </MultiBinding>
-                    </TextBlock.Text>
-                </TextBlock>
+                    </uc:HighlightTextBlock.Text>
+                </uc:HighlightTextBlock>
             </Grid>
             <ws:FlexPanel MaxWidth="240"
                           Margin="0,0,0,12"
