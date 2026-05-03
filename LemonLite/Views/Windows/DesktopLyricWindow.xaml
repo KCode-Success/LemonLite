@@ -188,6 +188,7 @@
         <!--  interactive info on Island Mode  -->
         <Grid x:Name="InfoPanel"
               Height="146"
+              HorizontalAlignment="Stretch"
               Margin="20,0"
               Visibility="Collapsed">
             <Grid HorizontalAlignment="Center">

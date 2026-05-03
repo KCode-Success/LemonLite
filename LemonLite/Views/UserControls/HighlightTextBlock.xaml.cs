@@ -36,7 +36,17 @@ public partial class HighlightTextBlock : UserControl
     {
         InitializeComponent();
         Loaded += HighlightTextBlock_Loaded;
+        Unloaded += HighlightTextBlock_Unloaded;
         IsSpiltEnabled = isSpiltEnabled;
+    }
+
+    private void HighlightTextBlock_Unloaded(object sender, RoutedEventArgs e)
+    {
+        Loaded -= HighlightTextBlock_Loaded;
+        Unloaded -= HighlightTextBlock_Unloaded;
+        PART_Rectangle.Effect = null;
+        _effect = null;
+        CleanupOldClip();
     }
 
     private void HighlightTextBlock_Loaded(object sender, RoutedEventArgs e)
@@ -49,6 +59,7 @@ public partial class HighlightTextBlock : UserControl
 
     private double _layoutConstraintWidth;
     private double _layoutConstraintHeight;
+    private bool _clipGeometryDirty = true;
 
     protected override Size MeasureOverride(Size availableSize)
     {
@@ -63,19 +74,37 @@ public partial class HighlightTextBlock : UserControl
             _layoutConstraintWidth = availableSize.Width;
             _layoutConstraintHeight = availableSize.Height;
         }
-        UpdateTextClip();
+
+        if (_clipGeometryDirty)
+        {
+            UpdateTextClip();
+            _clipGeometryDirty = false;
+        }
         return base.MeasureOverride(availableSize);
     }
 
     protected override Size ArrangeOverride(Size finalSize)
     {
-        if (!IsSpiltEnabled && !string.IsNullOrEmpty(Text) &&
-            (Math.Abs(finalSize.Width - _layoutConstraintWidth) > 0.5 ||
-             Math.Abs(finalSize.Height - _layoutConstraintHeight) > 0.5))
+        // 当HighlightTextBlock不可见时，其MeasureOverride/ArrangeOverride可能收到0的可用空间，导致保存了0的约束大小
+        if (!IsSpiltEnabled && !string.IsNullOrEmpty(Text))
         {
-            _layoutConstraintWidth = finalSize.Width;
-            _layoutConstraintHeight = finalSize.Height;
-            UpdateCompleteTextClip();
+            // 无论是否可见，如果尺寸有明显变化就可以更新
+            if (Math.Abs(finalSize.Width - _layoutConstraintWidth) > 0.5 ||
+                Math.Abs(finalSize.Height - _layoutConstraintHeight) > 0.5)
+            {
+                _layoutConstraintWidth = finalSize.Width;
+                _layoutConstraintHeight = finalSize.Height;
+                CleanupOldClip();
+                UpdateCompleteTextClip();
+            }
+            else if (_clipGeometryDirty) 
+            {
+                // 如果文字变了但尺寸还没变（比如在后台不可见时更新了文字）
+                // 我们依然需要更新 Clip，否则会裁剪错误
+                CleanupOldClip();
+                UpdateCompleteTextClip();
+                _clipGeometryDirty = false;
+            }
         }
         return base.ArrangeOverride(finalSize);
     }
@@ -323,15 +352,39 @@ public partial class HighlightTextBlock : UserControl
     {
         if (d is HighlightTextBlock control)
         {
+            control._clipGeometryDirty = true;
             control.InvalidateMeasure();
         }
     }
 
+    private void CleanupOldClip()
+    {
+        try
+        {
+            if (Geometries != null)
+            {
+                foreach (var g in Geometries)
+                {
+                    if (g.Transform != null)
+                    {
+                        g.Transform.BeginAnimation(TranslateTransform.YProperty, null);
+                        g.Transform.BeginAnimation(TranslateTransform.XProperty, null);
+                        g.Transform = null;
+                    }
+                }
+                Geometries = null;
+            }
+        }
+        catch { }
+        PART_Rectangle.Clip = null;
+    }
+
     private void UpdateTextClip()
     {
+        CleanupOldClip();
+
         if (string.IsNullOrEmpty(Text))
         {
-            PART_Rectangle.Clip = null;
             PART_Rectangle.Width = 0;
             PART_Rectangle.Height = 0;
             return;
@@ -437,6 +490,7 @@ public partial class HighlightTextBlock : UserControl
             : (constraintHeight > 0 ? constraintHeight : textHeight);
 
         var geometry = formattedText.BuildGeometry(new Point(0, 0));
+        if (geometry.CanFreeze) geometry.Freeze();
         PART_Rectangle.Clip = geometry;
         PART_Rectangle.Width = containerWidth;
         PART_Rectangle.Height = containerHeight;

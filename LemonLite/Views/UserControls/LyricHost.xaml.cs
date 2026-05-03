@@ -87,6 +87,12 @@ public sealed class SelectiveLyricLine : Border
         MouseEnter += SelectiveLyricLine_MouseEnter;
         MouseLeave += SelectiveLyricLine_MouseLeave;
         MouseDown += SelectiveLyricLine_MouseDown;
+        Unloaded += SelectiveLyricLine_Unloaded;
+    }
+
+    private void SelectiveLyricLine_Unloaded(object sender, RoutedEventArgs e)
+    {
+        ClearData();
     }
 
     public void LoadData(LyricLineData data, double mainFontSize, bool showTranslation, bool showRomaji)
@@ -118,6 +124,10 @@ public sealed class SelectiveLyricLine : Border
 
     public void ClearData()
     {
+        if (LyricLine != null)
+        {
+            LyricLine.ClearAll();
+        }
         LyricLine = null;
         Child = null;
     }
