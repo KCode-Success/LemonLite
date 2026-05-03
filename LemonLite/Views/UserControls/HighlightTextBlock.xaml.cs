@@ -85,14 +85,26 @@ public partial class HighlightTextBlock : UserControl
 
     protected override Size ArrangeOverride(Size finalSize)
     {
-        if (!IsSpiltEnabled && !string.IsNullOrEmpty(Text) &&
-            (Math.Abs(finalSize.Width - _layoutConstraintWidth) > 0.5 ||
-             Math.Abs(finalSize.Height - _layoutConstraintHeight) > 0.5))
+        // 当HighlightTextBlock不可见时，其MeasureOverride/ArrangeOverride可能收到0的可用空间，导致保存了0的约束大小
+        if (!IsSpiltEnabled && !string.IsNullOrEmpty(Text))
         {
-            _layoutConstraintWidth = finalSize.Width;
-            _layoutConstraintHeight = finalSize.Height;
-            CleanupOldClip();
-            UpdateCompleteTextClip();
+            // 无论是否可见，如果尺寸有明显变化就可以更新
+            if (Math.Abs(finalSize.Width - _layoutConstraintWidth) > 0.5 ||
+                Math.Abs(finalSize.Height - _layoutConstraintHeight) > 0.5)
+            {
+                _layoutConstraintWidth = finalSize.Width;
+                _layoutConstraintHeight = finalSize.Height;
+                CleanupOldClip();
+                UpdateCompleteTextClip();
+            }
+            else if (_clipGeometryDirty) 
+            {
+                // 如果文字变了但尺寸还没变（比如在后台不可见时更新了文字）
+                // 我们依然需要更新 Clip，否则会裁剪错误
+                CleanupOldClip();
+                UpdateCompleteTextClip();
+                _clipGeometryDirty = false;
+            }
         }
         return base.ArrangeOverride(finalSize);
     }
