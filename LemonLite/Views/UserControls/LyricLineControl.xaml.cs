@@ -35,12 +35,14 @@ public partial class LyricLineControl : UserControl
     public LyricLineControl()
     {
         InitializeComponent();
+        Unloaded += LyricLineControl_Unloaded;
         //no blur effect
     }
 
     public LyricLineControl(SyllableLineInfo info,double fontsize=22)
     {
         InitializeComponent();
+        Unloaded += LyricLineControl_Unloaded;
         MainLineInfo = info;
         Effect = new BlurEffect() { Radius = InActiveLrcBlurRadius };
         LoadMainLrc(info.Syllables,fontsize);
@@ -49,9 +51,16 @@ public partial class LyricLineControl : UserControl
     public LyricLineControl(LineInfo info,double fontsize=22)
     {
         InitializeComponent();
+        Unloaded += LyricLineControl_Unloaded;
         MainLineInfo = info;
         Effect = new BlurEffect() { Radius = InActiveLrcBlurRadius };
         LoadPlainLrc(info.Text,fontsize);
+    }
+
+    private void LyricLineControl_Unloaded(object sender, RoutedEventArgs e)
+    {
+        ClearAll();
+        Unloaded -= LyricLineControl_Unloaded;
     }
 
     public void ClearAll()
@@ -291,7 +300,11 @@ public partial class LyricLineControl : UserControl
                 lrc.Value.HighlightPos = 1;
                 lrc.Value.BeginAnimation(HighlightTextBlock.HighlightIntensityProperty, new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(300)));
             }
-            else lrc.Value.HighlightPos = InitialHighlightPos;
+            else
+            { 
+               lrc.Value.HighlightPos = InitialHighlightPos;
+               lrc.Value.BeginAnimation(HighlightTextBlock.HighlightIntensityProperty, null);
+            }
 
             //clear lift-up
             var clearAnimation = new DoubleAnimation(0, TimeSpan.FromMilliseconds(200));
@@ -327,6 +340,7 @@ public partial class LyricLineControl : UserControl
             {
                 if (control.MainLrcContainer.Children[0] is HighlightTextBlock tb)
                 {
+                    tb.BeginAnimation(HighlightTextBlock.HighlightPosProperty, null);
                     tb.HighlightPos = inactiveAnimated ? 1 : InitialHighlightPos;
                 }
             }
@@ -349,6 +363,7 @@ public partial class LyricLineControl : UserControl
             {
                 if (control.MainLrcContainer.Children[0] is HighlightTextBlock tb)
                 {
+                    tb.BeginAnimation(HighlightTextBlock.HighlightPosProperty, null);
                     tb.HighlightPos = InitialHighlightPos;
                 }
             }

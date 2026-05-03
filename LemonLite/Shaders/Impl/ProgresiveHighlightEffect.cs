@@ -9,20 +9,20 @@ public sealed class ProgresiveHighlightEffect : ShaderEffect
 {
     #region Shader
 
-    private static readonly PixelShader _pixelShader = new PixelShader
-    {
-        UriSource = new Uri(
-            "pack://application:,,,/LemonLite;component/Shaders/TextGlow.ps",
-            UriKind.Absolute)
-    };
-
     #endregion
 
     #region Constructor
 
     public ProgresiveHighlightEffect()
     {
-        PixelShader = _pixelShader;
+        // 动态创建实例而不是复用静态的PixelShader，避免WPF在内部挂载事件的内存泄露
+        PixelShader = new PixelShader
+        {
+            UriSource = new Uri(
+                "pack://application:,,,/LemonLite;component/Shaders/TextGlow.ps",
+                UriKind.Absolute)
+        };
+        PixelShader.Freeze();
 
         UpdateShaderValue(InputProperty);
 
