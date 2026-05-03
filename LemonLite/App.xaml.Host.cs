@@ -44,13 +44,16 @@ public partial class App
                                                             .AddConfig<AppOption>()
                                                             .AddConfig<AudioVisualizerConfig>()
                                                             .AddConfig<SmtcMetadataAliasConfig>()
+                                                            .AddConfig<HotkeyConfig>()
                                                             .Init());
         services.AddHostedService(p => p.GetRequiredService<SmtcService>());
+        services.AddHostedService(p => p.GetRequiredService<GlobalHotkeyService>());
 
         services.AddSingleton<AppSettingService>();
         services.AddSingleton<NotifyIconService>();
         services.AddSingleton<UIResourceService>();
         services.AddSingleton<SmtcService>();
+        services.AddSingleton<GlobalHotkeyService>();
         services.AddSingleton<LyricService>();
         services.AddSingleton<WindowInstanceManager>();
         services.AddSingleton<EfficiencyModeService>();

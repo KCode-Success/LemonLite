@@ -303,4 +303,28 @@
   <data name="EmbeddedWindow" xml:space="preserve">
     <value>Embedded Lyric</value>
   </data>
+  <data name="GlobalHotkeys" xml:space="preserve">
+    <value>Global Hotkeys</value>
+  </data>
+  <data name="EnableGlobalHotkeys" xml:space="preserve">
+    <value>Enable Global Hotkeys</value>
+  </data>
+  <data name="HotkeyPlayPause" xml:space="preserve">
+    <value>Play / Pause</value>
+  </data>
+  <data name="HotkeyNext" xml:space="preserve">
+    <value>Next Track</value>
+  </data>
+  <data name="HotkeyPrevious" xml:space="preserve">
+    <value>Previous Track</value>
+  </data>
+  <data name="PressKeysHint" xml:space="preserve">
+    <value>Press keys...</value>
+  </data>
+  <data name="HotkeyConflict" xml:space="preserve">
+    <value>⚠ This hotkey conflicts with another application</value>
+  </data>
+  <data name="HotkeyNotSet" xml:space="preserve">
+    <value>Not set</value>
+  </data>
 </root>
