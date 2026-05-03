@@ -6,6 +6,7 @@
       xmlns:loc="clr-namespace:LemonLite.Services"
       xmlns:local="clr-namespace:LemonLite.Views.Pages"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:uc="clr-namespace:LemonLite.Views.UserControls"
       xmlns:ws="https://schemas.elecho.dev/wpfsuite"
       Title="AppSettingsPage"
       d:DataContext="{d:DesignInstance local:AppSettingsPage}"
@@ -80,6 +81,89 @@
                             <RadioButton Content="{Binding Source={x:Static loc:LocalizationService.Instance}, Path=[Chinese], Mode=OneWay}" IsChecked="{Binding IsChineseLanguage}" />
                         </ws:StackPanel>
                     </Grid>
+                </Border>
+            </ws:StackPanel>
+            <!--  Global Hotkeys  -->
+            <ws:StackPanel Spacing="8">
+                <TextBlock Margin="0,8"
+                           FontSize="22"
+                           Text="{Binding Source={x:Static loc:LocalizationService.Instance}, Path=[GlobalHotkeys], Mode=OneWay}" />
+
+                <Border Height="48"
+                        Background="{DynamicResource MaskColor}"
+                        CornerRadius="12">
+                    <ToggleButton Margin="12,0,12,0"
+                                  Content="{Binding Source={x:Static loc:LocalizationService.Instance}, Path=[EnableGlobalHotkeys], Mode=OneWay}"
+                                  IsChecked="{Binding EnableGlobalHotkeys}"
+                                  Style="{DynamicResource RoundToggleButtonStyle}" />
+                </Border>
+
+                <Border MinHeight="48"
+                        Background="{DynamicResource MaskColor}"
+                        CornerRadius="12"
+                        Visibility="{Binding HotkeySettingsVisibility}">
+                    <Grid Margin="12,8">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Row="0"
+                                   Grid.Column="0"
+                                   Margin="0,0,16,8"
+                                   VerticalAlignment="Center"
+                                   Text="{Binding Source={x:Static loc:LocalizationService.Instance}, Path=[HotkeyPlayPause], Mode=OneWay}" />
+                        <uc:HotkeyRecorder Grid.Row="0"
+                                           Grid.Column="1"
+                                           Margin="0,0,12,8"
+                                           HorizontalAlignment="Right"
+                                           HasConflict="{Binding PlayPauseConflict}"
+                                           HotkeyBinding="{Binding PlayPauseHotkey}"
+                                           PlaceholderText="{Binding Source={x:Static loc:LocalizationService.Instance}, Path=[HotkeyNotSet], Mode=OneWay}" />
+
+                        <TextBlock Grid.Row="1"
+                                   Grid.Column="0"
+                                   Margin="0,0,16,8"
+                                   VerticalAlignment="Center"
+                                   Text="{Binding Source={x:Static loc:LocalizationService.Instance}, Path=[HotkeyNext], Mode=OneWay}" />
+                        <uc:HotkeyRecorder Grid.Row="1"
+                                           Grid.Column="1"
+                                           Margin="0,0,12,8"
+                                           HorizontalAlignment="Right"
+                                           HasConflict="{Binding PlayNextConflict}"
+                                           HotkeyBinding="{Binding PlayNextHotkey}"
+                                           PlaceholderText="{Binding Source={x:Static loc:LocalizationService.Instance}, Path=[HotkeyNotSet], Mode=OneWay}" />
+
+                        <TextBlock Grid.Row="2"
+                                   Grid.Column="0"
+                                   Margin="0,0,16,0"
+                                   VerticalAlignment="Center"
+                                   Text="{Binding Source={x:Static loc:LocalizationService.Instance}, Path=[HotkeyPrevious], Mode=OneWay}" />
+                        <uc:HotkeyRecorder Grid.Row="2"
+                                           Grid.Column="1"
+                                           Margin="0,0,12,0"
+                                           HorizontalAlignment="Right"
+                                           HasConflict="{Binding PlayPreviousConflict}"
+                                           HotkeyBinding="{Binding PlayPreviousHotkey}"
+                                           PlaceholderText="{Binding Source={x:Static loc:LocalizationService.Instance}, Path=[HotkeyNotSet], Mode=OneWay}" />
+                    </Grid>
+                </Border>
+
+                <Border MinHeight="24"
+                        Background="Transparent"
+                        CornerRadius="12"
+                        Visibility="{Binding ConflictWarningVisibility}">
+                    <TextBlock Margin="12,0"
+                               VerticalAlignment="Center"
+                               FontSize="12"
+                               Foreground="OrangeRed"
+                               Text="{Binding ConflictWarningText}"
+                               TextWrapping="Wrap" />
                 </Border>
             </ws:StackPanel>
             <!--  Appearance  -->

@@ -303,4 +303,28 @@
   <data name="EmbeddedWindow" xml:space="preserve">
     <value>桌面嵌入歌词</value>
   </data>
+  <data name="GlobalHotkeys" xml:space="preserve">
+    <value>全局快捷键</value>
+  </data>
+  <data name="EnableGlobalHotkeys" xml:space="preserve">
+    <value>启用全局快捷键</value>
+  </data>
+  <data name="HotkeyPlayPause" xml:space="preserve">
+    <value>播放 / 暂停</value>
+  </data>
+  <data name="HotkeyNext" xml:space="preserve">
+    <value>下一曲</value>
+  </data>
+  <data name="HotkeyPrevious" xml:space="preserve">
+    <value>上一曲</value>
+  </data>
+  <data name="PressKeysHint" xml:space="preserve">
+    <value>请按下快捷键...</value>
+  </data>
+  <data name="HotkeyConflict" xml:space="preserve">
+    <value>⚠ 此快捷键与其他应用冲突</value>
+  </data>
+  <data name="HotkeyNotSet" xml:space="preserve">
+    <value>未设置</value>
+  </data>
 </root>

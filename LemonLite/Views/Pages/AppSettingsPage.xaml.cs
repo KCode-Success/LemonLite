@@ -11,23 +11,24 @@ using static LemonLite.Configs.Appearance;
 
 namespace LemonLite.Views.Pages
 {
-    /// <summary>
-    /// Interaction logic for AppSettingsPage.xaml
-    /// </summary>
     [ObservableObject]
     public partial class AppSettingsPage : Page
     {
         private readonly SettingsMgr<AppOption> settings;
         private readonly SettingsMgr<Appearance> appearanceSettings;
+        private readonly SettingsMgr<HotkeyConfig> hotkeySettings;
+        private readonly GlobalHotkeyService _hotkeyService;
         private readonly SmtcService smtc;
 
-        public AppSettingsPage(AppSettingService appSettingService, SmtcService smtcService)
+        public AppSettingsPage(AppSettingService appSettingService, SmtcService smtcService, GlobalHotkeyService hotkeyService)
         {
             InitializeComponent();
             DataContext = this;
             Loaded += AppSettingsPage_Loaded;
             settings=appSettingService.GetConfigMgr<AppOption>();
             appearanceSettings=appSettingService.GetConfigMgr<Appearance>();
+            hotkeySettings=appSettingService.GetConfigMgr<HotkeyConfig>();
+            _hotkeyService = hotkeyService;
             ColorMode = appearanceSettings.Data.ColorMode;
             smtc = smtcService;
         }
@@ -43,15 +44,19 @@ namespace LemonLite.Views.Pages
             BackgroundImagePath = appearanceSettings.Data.BackgroundImagePath ?? "";
             BackgroundOpacity = appearanceSettings.Data.BackgroundOpacity;
             ShowInTaskbarWhenMiniMode = appearanceSettings.Data.ShowInTaskbarWhenMiniMode;
-            
-            // Load language setting
+
+            EnableGlobalHotkeys = hotkeySettings.Data.EnableGlobalHotkeys;
+            PlayPauseHotkey = hotkeySettings.Data.PlayPause.Clone();
+            PlayNextHotkey = hotkeySettings.Data.PlayNext.Clone();
+            PlayPreviousHotkey = hotkeySettings.Data.PlayPrevious.Clone();
+            UpdateConflictStates();
+
             var localizationService = LocalizationService.Instance;
             localizationService.LanguageChanged += OnLanguageChanged;
         }
-        
+
         private void OnLanguageChanged()
         {
-            // Refresh UI when language changes
             OnPropertyChanged(nameof(IsEnglishLanguage));
             OnPropertyChanged(nameof(IsChineseLanguage));
         }
@@ -90,7 +95,99 @@ namespace LemonLite.Views.Pages
             if (smtc.IsSessionValid)
                 App.WindowManager.SetWindowState<AudioVisualizerWindow>(value);
         }
-        
+
+        [ObservableProperty]
+        private bool _enableGlobalHotkeys;
+
+        partial void OnEnableGlobalHotkeysChanged(bool value)
+        {
+            hotkeySettings.Data.EnableGlobalHotkeys = value;
+            hotkeySettings.TriggerDataChanged();
+            OnPropertyChanged(nameof(HotkeySettingsVisibility));
+            _hotkeyService.RegisterAllHotkeys();
+            if (!value)
+            {
+                PlayPauseConflict = false;
+                PlayNextConflict = false;
+                PlayPreviousConflict = false;
+                ConflictWarningText = "";
+                OnPropertyChanged(nameof(ConflictWarningVisibility));
+            }
+            else
+            {
+                UpdateConflictStates();
+            }
+        }
+
+        public Visibility HotkeySettingsVisibility => EnableGlobalHotkeys ? Visibility.Visible : Visibility.Collapsed;
+
+        [ObservableProperty]
+        private HotkeyBinding _playPauseHotkey = new();
+
+        partial void OnPlayPauseHotkeyChanged(HotkeyBinding value)
+        {
+            if (hotkeySettings == null) return;
+            hotkeySettings.Data.PlayPause = value.Clone();
+            hotkeySettings.TriggerDataChanged();
+            _hotkeyService.RegisterAllHotkeys();
+            UpdateConflictStates();
+        }
+
+        [ObservableProperty]
+        private HotkeyBinding _playNextHotkey = new();
+
+        partial void OnPlayNextHotkeyChanged(HotkeyBinding value)
+        {
+            if (hotkeySettings == null) return;
+            hotkeySettings.Data.PlayNext = value.Clone();
+            hotkeySettings.TriggerDataChanged();
+            _hotkeyService.RegisterAllHotkeys();
+            UpdateConflictStates();
+        }
+
+        [ObservableProperty]
+        private HotkeyBinding _playPreviousHotkey = new();
+
+        partial void OnPlayPreviousHotkeyChanged(HotkeyBinding value)
+        {
+            if (hotkeySettings == null) return;
+            hotkeySettings.Data.PlayPrevious = value.Clone();
+            hotkeySettings.TriggerDataChanged();
+            _hotkeyService.RegisterAllHotkeys();
+            UpdateConflictStates();
+        }
+
+        [ObservableProperty]
+        private bool _playPauseConflict;
+        [ObservableProperty]
+        private bool _playNextConflict;
+        [ObservableProperty]
+        private bool _playPreviousConflict;
+
+        [ObservableProperty]
+        private string _conflictWarningText = "";
+        public Visibility ConflictWarningVisibility => string.IsNullOrEmpty(ConflictWarningText) ? Visibility.Collapsed : Visibility.Visible;
+
+        private void UpdateConflictStates()
+        {
+            PlayPauseConflict = !_hotkeyService.IsPlayPauseRegistered && EnableGlobalHotkeys && !hotkeySettings.Data.PlayPause.IsEmpty;
+            PlayNextConflict = !_hotkeyService.IsPlayNextRegistered && EnableGlobalHotkeys && !hotkeySettings.Data.PlayNext.IsEmpty;
+            PlayPreviousConflict = !_hotkeyService.IsPlayPreviousRegistered && EnableGlobalHotkeys && !hotkeySettings.Data.PlayPrevious.IsEmpty;
+
+            var conflicts = new System.Collections.Generic.List<string>();
+            if (PlayPauseConflict && _hotkeyService.PlayPauseConflictMessage != null)
+                conflicts.Add(_hotkeyService.PlayPauseConflictMessage);
+            if (PlayNextConflict && _hotkeyService.PlayNextConflictMessage != null)
+                conflicts.Add(_hotkeyService.PlayNextConflictMessage);
+            if (PlayPreviousConflict && _hotkeyService.PlayPreviousConflictMessage != null)
+                conflicts.Add(_hotkeyService.PlayPreviousConflictMessage);
+
+            ConflictWarningText = conflicts.Count > 0
+                ? LocalizationService.Instance["HotkeyConflict"] + "\n" + string.Join("\n", conflicts)
+                : "";
+            OnPropertyChanged(nameof(ConflictWarningVisibility));
+        }
+
         [ObservableProperty]
         private ColorModeType _colorMode;
 
@@ -129,7 +226,7 @@ namespace LemonLite.Views.Pages
         {
             ApplyAppFontFamily();
         }
- 
+
         [ObservableProperty]
         private BackgroundType _backgroundType;
 
@@ -194,7 +291,6 @@ namespace LemonLite.Views.Pages
             }
         }
 
-        // Background Opacity
         [ObservableProperty]
         private double _backgroundOpacity;
 
@@ -211,13 +307,13 @@ namespace LemonLite.Views.Pages
             appearanceSettings.Data.ShowInTaskbarWhenMiniMode = value;
             appearanceSettings.TriggerDataChanged();
         }
-        
+
         public bool IsEnglishLanguage
         {
             get => LocalizationService.Instance.CurrentLanguage == "en";
             set { if (value) LocalizationService.Instance.SetLanguage("en"); }
         }
-        
+
         public bool IsChineseLanguage
         {
             get => LocalizationService.Instance.CurrentLanguage == "zh";
