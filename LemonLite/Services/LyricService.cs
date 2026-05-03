@@ -1,10 +1,12 @@
 using LemonLite.Configs;
 using LemonLite.Entities;
+using LemonLite.Sources;
 using LemonLite.Utils;
 using Lyricify.Lyrics.Models;
 using Lyricify.Lyrics.Searchers.Helpers;
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -34,11 +36,13 @@ public class LyricService
 {
     private readonly SmtcService _smtcService;
     private readonly SettingsMgr<AppOption> _appOption;
+    private readonly SettingsMgr<SmtcMetadataCache> _metadataCache;
 
     public LyricService(SmtcService smtcService, AppSettingService appSettingService)
     {
         _smtcService = smtcService;
         _appOption = appSettingService.GetConfigMgr<AppOption>();
+        _metadataCache= appSettingService.GetConfigMgr<SmtcMetadataCache>();
         _smtcService.SmtcListener.MediaPropertiesChanged += OnMediaPropertiesChanged;
         _smtcService.SmtcListener.SessionChanged += OnMediaPropertiesChanged;
         _smtcService.PositionChanged += OnPositionChanged;
@@ -152,17 +156,59 @@ public class LyricService
         try
         {
             var sources = _appOption.Data.GetSearchSources(mediaId);
+            if (sources is not { Count: > 0 }) sources = LyricSourceRegistry.DefaultSourceIds;
+            MusicMetaData? musicMetaData = null;
 
-            //retry with or without Album or duration metadata.
-            var searchResult = await LyricHelper.SearchMusicAsync(info.Title, info.Artist, info.Album, durationMs, sources, CompareHelper.MatchType.PrettyHigh, cancellationToken);
-            if (cancellationToken.IsCancellationRequested) return;
-            searchResult ??= await LyricHelper.SearchMusicAsync(info.Title, info.Artist, info.Album, null, sources, CompareHelper.MatchType.Medium, cancellationToken);
-            if (cancellationToken.IsCancellationRequested) return;
-            searchResult ??= await LyricHelper.SearchMusicAsync(info.Title, info.Artist, null, durationMs, sources, CompareHelper.MatchType.Medium, cancellationToken);
-            if (cancellationToken.IsCancellationRequested) return;
-            searchResult ??= await LyricHelper.SearchMusicAsync(info.Title, info.Artist, null, null, sources, CompareHelper.MatchType.Medium, cancellationToken);
+            //check metadata cache first
+            var cacheKey = $"{info.Title}_{info.Artist}_{info.Album}";
+            if (_metadataCache.Data.Cache.TryGetValue(cacheKey, out var cachedMeta) && cachedMeta is { Title: not null, LyricFileIds.Count: > 0 })
+            {
+                //only the first source preference is checked in cache.
+                var src = sources[0];
+                if (cachedMeta.LyricFileIds.TryGetValue(src, out var lyricId) && !string.IsNullOrEmpty(lyricId))
+                {
+                    var searcher = LyricSourceRegistry.Get(src)?.CreateSearcher();
+                    musicMetaData = new MusicMetaData
+                    {
+                        Title = cachedMeta.Title,
+                        Artists = cachedMeta.Artists,
+                        Album = cachedMeta.Album,
+                        DurationMs = cachedMeta.DurationMs,
+                        Id = lyricId,
+                        Searcher = searcher
+                    };
+                }
+            }
+            
+            if(musicMetaData == null) 
+            {
+                //retry with or without Album or duration metadata.
+                var searchResult = await LyricHelper.SearchMusicAsync(info.Title, info.Artist, info.Album, durationMs, sources, CompareHelper.MatchType.PrettyHigh, cancellationToken);
+                if (cancellationToken.IsCancellationRequested) return;
+                searchResult ??= await LyricHelper.SearchMusicAsync(info.Title, info.Artist, info.Album, null, sources, CompareHelper.MatchType.Medium, cancellationToken);
+                if (cancellationToken.IsCancellationRequested) return;
+                searchResult ??= await LyricHelper.SearchMusicAsync(info.Title, info.Artist, null, durationMs, sources, CompareHelper.MatchType.Medium, cancellationToken);
+                if (cancellationToken.IsCancellationRequested) return;
+                searchResult ??= await LyricHelper.SearchMusicAsync(info.Title, info.Artist, null, null, sources, CompareHelper.MatchType.Medium, cancellationToken);
+                musicMetaData = searchResult;
 
-            if (searchResult is { Id: not null } musicMetaData)
+                if(searchResult is { Id: not null ,Title: not null, Artists: not null})
+                {
+                    //record cache
+                    cachedMeta ??= new SmtcMetadataCacheEntry()
+                    {
+                        Title = searchResult.Title,
+                        Artists = searchResult.Artists,
+                        Album = searchResult.Album ?? "",
+                        DurationMs = searchResult.DurationMs,
+                        LyricFileIds = []
+                    };
+                    cachedMeta.LyricFileIds[searchResult.Searcher?.Name?.ToLower()??"unknown"] = searchResult.Id;
+                    _metadataCache.Data.Cache[cacheKey] = cachedMeta;
+                }
+            }
+
+            if (musicMetaData is { Id: not null })
             {
                 if (cancellationToken.IsCancellationRequested) return;
 

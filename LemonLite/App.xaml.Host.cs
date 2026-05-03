@@ -45,6 +45,7 @@ public partial class App
                                                             .AddConfig<AudioVisualizerConfig>()
                                                             .AddConfig<SmtcMetadataAliasConfig>()
                                                             .AddConfig<HotkeyConfig>()
+                                                            .AddConfig<SmtcMetadataCache>(Utils.Settings.sType.Cache)
                                                             .Init());
         services.AddHostedService(p => p.GetRequiredService<SmtcService>());
         services.AddHostedService(p => p.GetRequiredService<GlobalHotkeyService>());
