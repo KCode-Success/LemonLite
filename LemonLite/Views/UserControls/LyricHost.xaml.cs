@@ -92,10 +92,6 @@ public sealed class SelectiveLyricLine : Border
 
     private void SelectiveLyricLine_Unloaded(object sender, RoutedEventArgs e)
     {
-        MouseEnter -= SelectiveLyricLine_MouseEnter;
-        MouseLeave -= SelectiveLyricLine_MouseLeave;
-        MouseDown -= SelectiveLyricLine_MouseDown;
-        Unloaded -= SelectiveLyricLine_Unloaded;
         ClearData();
     }
 
