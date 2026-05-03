@@ -17,5 +17,5 @@ public class SmtcMetadataCacheEntry
 
 public class SmtcMetadataCache
 {
-    public Dictionary<string, SmtcMetadataCacheEntry> Cache { get; } = [];
+    public Dictionary<string, SmtcMetadataCacheEntry> Cache { get; set; } = [];
 }
