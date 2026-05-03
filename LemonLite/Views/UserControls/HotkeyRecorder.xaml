@@ -12,8 +12,8 @@
              LostFocus="HotkeyRecorder_LostFocus"
              mc:Ignorable="d">
     <Border x:Name="RootBorder"
-            MinWidth="160"
             Height="32"
+            MinWidth="160"
             Background="{DynamicResource MaskColor}"
             BorderBrush="{DynamicResource BorderColor}"
             BorderThickness="1"

@@ -25,12 +25,19 @@ namespace LemonLite.Views.Pages
             InitializeComponent();
             DataContext = this;
             Loaded += AppSettingsPage_Loaded;
+            Unloaded += AppSettingsPage_Unloaded;
             settings=appSettingService.GetConfigMgr<AppOption>();
             appearanceSettings=appSettingService.GetConfigMgr<Appearance>();
             hotkeySettings=appSettingService.GetConfigMgr<HotkeyConfig>();
             _hotkeyService = hotkeyService;
             ColorMode = appearanceSettings.Data.ColorMode;
             smtc = smtcService;
+        }
+
+        private void AppSettingsPage_Unloaded(object sender, RoutedEventArgs e)
+        {
+            var localizationService = LocalizationService.Instance;
+            localizationService.LanguageChanged -= OnLanguageChanged;
         }
 
         private void AppSettingsPage_Loaded(object sender, RoutedEventArgs e)
@@ -59,6 +66,7 @@ namespace LemonLite.Views.Pages
         {
             OnPropertyChanged(nameof(IsEnglishLanguage));
             OnPropertyChanged(nameof(IsChineseLanguage));
+            UpdateConflictStates();
         }
 
         [ObservableProperty]
