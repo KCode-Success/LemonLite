@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:base="clr-namespace:LemonLite.Utils"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:fluent="https://github.com/TwilightLemon/FluentWpfCore"
              xmlns:local="clr-namespace:LemonLite.Views.UserControls"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              d:DesignHeight="450"
@@ -24,6 +25,9 @@
                                    FocusVisualStyle="{x:Null}"
                                    HorizontalScrollBarVisibility="Disabled"
                                    VerticalScrollBarVisibility="Hidden">
+                    <base:ScrollViewer.Physics>
+                        <fluent:DefaultScrollPhysics Smoothness="0.8" StopThreshold="0.5" />
+                    </base:ScrollViewer.Physics>
                     <ItemsPresenter />
                 </base:ScrollViewer>
             </ControlTemplate>

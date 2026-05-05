@@ -206,7 +206,7 @@
                                        Margin="96,32,20,0"
                                        VerticalAlignment="Top"
                                        d:Text="Hello"
-                                       uc:HighlightTextBlock.HighlightIntensity="1"
+                                       uc:HighlightTextBlock.HighlightIntensity="0.9"
                                        FontSize="18"
                                        FontWeight="SemiBold"
                                        Foreground="{DynamicResource InActiveLrcForeground}"

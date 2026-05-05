@@ -318,7 +318,7 @@ namespace LemonLite.Views.Windows
         {
             if (_isIslandMode)
             {
-                if (!_isMouseIn && _settingsMgr.Data.UsePopupAnimation)
+                if (_settingsMgr.Data.UsePopupAnimation)
                 {
                     Storyboard sb = new();
                     var (scale, translate) = EnsureWindowRootTransformGroup();

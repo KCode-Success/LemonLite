@@ -60,6 +60,14 @@ public partial class HighlightTextBlock : UserControl
     private double _layoutConstraintWidth;
     private double _layoutConstraintHeight;
     private bool _clipGeometryDirty = true;
+    private bool _isUpdatingClip = false;
+    private string? _lastClipText = null;
+    private double _lastClipFontSize;
+    private FontFamily? _lastClipFontFamily;
+    private FontWeight _lastClipFontWeight;
+    private FontStyle _lastClipFontStyle;
+    private double _lastClipConstraintWidth;
+    private double _lastClipConstraintHeight;
 
     protected override Size MeasureOverride(Size availableSize)
     {
@@ -68,45 +76,120 @@ public partial class HighlightTextBlock : UserControl
             // 拆分模式：无视容器限制
             _layoutConstraintWidth = double.PositiveInfinity;
             _layoutConstraintHeight = double.PositiveInfinity;
+
+            if (_clipGeometryDirty)
+            {
+                UpdateTextClip();
+                _clipGeometryDirty = false;
+            }
+            return base.MeasureOverride(availableSize);
         }
         else
         {
             _layoutConstraintWidth = availableSize.Width;
             _layoutConstraintHeight = availableSize.Height;
-        }
 
-        if (_clipGeometryDirty)
-        {
-            UpdateTextClip();
-            _clipGeometryDirty = false;
+            // 非拆分模式：不在 Measure 阶段调用 UpdateTextClip，
+            // 否则 PART_Rectangle.Width 被设为文本宽度，导致控件期望尺寸过小，
+            // 父容器只分配文本宽度而不是可用宽度。
+            // Clip 更新延迟到 ArrangeOverride 中进行。
+            if (string.IsNullOrEmpty(Text))
+            {
+                return new Size(0, 0);
+            }
+
+            // 计算文本的自然尺寸，仅用于确定期望高度
+            var formattedText = new FormattedText(
+                Text,
+                CultureInfo.CurrentCulture,
+                FlowDirection,
+                new Typeface(FontFamily, FontStyle, FontWeight, FontStretch),
+                FontSize,
+                Brushes.Black,
+                VisualTreeHelper.GetDpi(this).PixelsPerDip);
+
+            if (!double.IsNaN(LineHeight) && LineHeight > 0)
+                formattedText.LineHeight = LineHeight;
+
+            // 设置换行约束以正确计算高度
+            if (TextWrapping != TextWrapping.NoWrap &&
+                !double.IsInfinity(availableSize.Width) && availableSize.Width > 0)
+            {
+                formattedText.MaxTextWidth = availableSize.Width;
+            }
+
+            var textWidth = formattedText.WidthIncludingTrailingWhitespace;
+            var textHeight = formattedText.Height;
+
+            // 宽度：使用文本自然宽度，但不超过可用宽度
+            // 拉伸填满容器应由父容器的 HorizontalAlignment=Stretch 控制
+            var desiredWidth = !double.IsInfinity(availableSize.Width) && availableSize.Width > 0
+                ? Math.Min(textWidth, availableSize.Width)
+                : textWidth;
+            var desiredHeight = textHeight;
+
+            return new Size(desiredWidth, desiredHeight);
         }
-        return base.MeasureOverride(availableSize);
     }
 
     protected override Size ArrangeOverride(Size finalSize)
     {
+        // 防止 UpdateCompleteTextClip 设置 Width/Height 导致的重入
+        if (_isUpdatingClip)
+            return base.ArrangeOverride(finalSize);
+
         // 当HighlightTextBlock不可见时，其MeasureOverride/ArrangeOverride可能收到0的可用空间，导致保存了0的约束大小
         if (!IsSpiltEnabled && !string.IsNullOrEmpty(Text))
         {
-            // 无论是否可见，如果尺寸有明显变化就可以更新
-            if (Math.Abs(finalSize.Width - _layoutConstraintWidth) > 0.5 ||
-                Math.Abs(finalSize.Height - _layoutConstraintHeight) > 0.5)
+            bool sizeChanged = Math.Abs(finalSize.Width - _layoutConstraintWidth) > 0.5 ||
+                Math.Abs(finalSize.Height - _layoutConstraintHeight) > 0.5;
+
+            if (sizeChanged)
             {
                 _layoutConstraintWidth = finalSize.Width;
                 _layoutConstraintHeight = finalSize.Height;
-                CleanupOldClip();
-                UpdateCompleteTextClip();
             }
-            else if (_clipGeometryDirty) 
+
+            // 仅在文本/字体/约束实际变化时重建 Geometry
+            if (sizeChanged || _clipGeometryDirty || NeedsClipUpdate())
             {
-                // 如果文字变了但尺寸还没变（比如在后台不可见时更新了文字）
-                // 我们依然需要更新 Clip，否则会裁剪错误
-                CleanupOldClip();
-                UpdateCompleteTextClip();
+                _isUpdatingClip = true;
+                try
+                {
+                    CleanupOldClip();
+                    UpdateCompleteTextClip();
+                    SaveClipState();
+                }
+                finally
+                {
+                    _isUpdatingClip = false;
+                }
                 _clipGeometryDirty = false;
             }
         }
         return base.ArrangeOverride(finalSize);
+    }
+
+    private bool NeedsClipUpdate()
+    {
+        return _lastClipText != Text
+            || _lastClipFontSize != FontSize
+            || _lastClipFontFamily != FontFamily
+            || _lastClipFontWeight != FontWeight
+            || _lastClipFontStyle != FontStyle
+            || Math.Abs(_lastClipConstraintWidth - _layoutConstraintWidth) > 0.5
+            || Math.Abs(_lastClipConstraintHeight - _layoutConstraintHeight) > 0.5;
+    }
+
+    private void SaveClipState()
+    {
+        _lastClipText = Text;
+        _lastClipFontSize = FontSize;
+        _lastClipFontFamily = FontFamily;
+        _lastClipFontWeight = FontWeight;
+        _lastClipFontStyle = FontStyle;
+        _lastClipConstraintWidth = _layoutConstraintWidth;
+        _lastClipConstraintHeight = _layoutConstraintHeight;
     }
 
     private void InitEffect()
