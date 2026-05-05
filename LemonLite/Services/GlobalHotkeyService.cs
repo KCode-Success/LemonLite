@@ -26,6 +26,13 @@ public class GlobalHotkeyService : IHostedService
 
     private enum HotkeyAction { PlayPause, PlayNext, PlayPrevious }
 
+    public enum HotkeyActionType { PlayPause, PlayNext, PlayPrevious }
+
+    /// <summary>
+    /// 热键动作触发后通知其它组件，参数为动作类型。
+    /// </summary>
+    public event Action<HotkeyActionType>? HotkeyActionTriggered;
+
     public bool IsPlayPauseRegistered { get; private set; }
     public bool IsPlayNextRegistered { get; private set; }
     public bool IsPlayPreviousRegistered { get; private set; }
@@ -111,12 +118,15 @@ public class GlobalHotkeyService : IHostedService
                         {
                             case HotkeyAction.PlayPause:
                                 _ = _smtcService.SmtcListener.PlayOrPause();
+                                HotkeyActionTriggered?.Invoke(HotkeyActionType.PlayPause);
                                 break;
                             case HotkeyAction.PlayNext:
                                 _ = _smtcService.SmtcListener.Next();
+                                HotkeyActionTriggered?.Invoke(HotkeyActionType.PlayNext);
                                 break;
                             case HotkeyAction.PlayPrevious:
                                 _ = _smtcService.SmtcListener.Previous();
+                                HotkeyActionTriggered?.Invoke(HotkeyActionType.PlayPrevious);
                                 break;
                         }
                     });

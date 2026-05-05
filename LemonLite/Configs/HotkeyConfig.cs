@@ -10,7 +10,7 @@ public class HotkeyConfig
     public HotkeyBinding PlayNext { get; set; } = new() { Modifiers = HotkeyModifiers.Ctrl | HotkeyModifiers.Alt, Key = 0x27 };
     public HotkeyBinding PlayPrevious { get; set; } = new() { Modifiers = HotkeyModifiers.Ctrl | HotkeyModifiers.Alt, Key = 0x25 };
 
-    public bool EnableGlobalHotkeys { get; set; } = true;
+    public bool EnableGlobalHotkeys { get; set; } = false;
 }
 
 public class HotkeyBinding
