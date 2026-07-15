@@ -272,12 +272,17 @@ namespace LemonLite.Views.Windows
         }
         private void HideLyricAnimation(Action<bool> callback)
         {
+            // 动画锁：停止上一次歌词动画，避免多个 Storyboard 同时操作 windowRoot 变换
+            StopLyricAnimation();
+
             if (_isIslandMode)
             {
                 if (!_isMouseIn && _settingsMgr.Data.UsePopupAnimation)
                 {
                     //收回隐藏
                     Storyboard sb = new();
+                    _lyricStoryboard = sb;
+                    _isLyricAnimating = true;
                     EnsureWindowRootTransformGroup();
 
                     DoubleAnimation scaleAni = new(1, 0, TimeSpan.FromMilliseconds(300))
@@ -298,11 +303,14 @@ namespace LemonLite.Views.Windows
                     sb.Children.Add(yAni);
                     sb.Completed += delegate
                     {
+                        _isLyricAnimating = false;
+                        _lyricStoryboard = null;
                         LrcScrollViewer.BeginAnimation(ScrollViewerUtils.HorizontalOffsetProperty, null);
                         ScrollViewerUtils.SetHorizontalOffset(LrcScrollViewer, 0);
                         callback?.Invoke(true);
                     };
                     sb.Begin();
+                    return;
                 }
             }
 
@@ -319,13 +327,29 @@ namespace LemonLite.Views.Windows
             blur.BeginAnimation(BlurEffect.RadiusProperty, anim);
         }
 
+        /// <summary>停止当前歌词动画（动画锁）。</summary>
+        private void StopLyricAnimation()
+        {
+            if (_lyricStoryboard != null)
+            {
+                _lyricStoryboard.Stop();
+                _lyricStoryboard = null;
+                _isLyricAnimating = false;
+            }
+        }
+
         private async void ShowLyricAnimation(int gap)
         {
+            // 动画锁：停止上一次歌词动画
+            StopLyricAnimation();
+
             if (_isIslandMode)
             {
                 if (_settingsMgr.Data.UsePopupAnimation)
                 {
                     Storyboard sb = new();
+                    _lyricStoryboard = sb;
+                    _isLyricAnimating = true;
                     var (scale, translate) = EnsureWindowRootTransformGroup();
                     scale.BeginAnimation(ScaleTransform.ScaleXProperty, null);
                     translate.BeginAnimation(TranslateTransform.YProperty, null);
@@ -350,10 +374,13 @@ namespace LemonLite.Views.Windows
                     sb.Children.Add(yAni);
                     sb.Completed += delegate
                     {
+                        _isLyricAnimating = false;
+                        _lyricStoryboard = null;
                         scale.BeginAnimation(ScaleTransform.ScaleXProperty, null);
                         translate.BeginAnimation(TranslateTransform.YProperty, null);
                     };
                     sb.Begin();
+                    return;
                 }
             }
 
@@ -423,6 +450,12 @@ namespace LemonLite.Views.Windows
         }
 
         bool _isIslandInfoOpen = false;
+
+        // 动画锁：防止多个动画同时执行造成混乱
+        private Storyboard? _lyricStoryboard;          // 当前歌词动画（Hide/Show）
+        private Storyboard? _infoPanelStoryboard;      // 当前 InfoPanel 动画（Open/Close）
+        private bool _isLyricAnimating;                // 歌词动画进行中
+        private bool _isInfoPanelAnimating;            // InfoPanel 动画进行中
         private void DesktopLyricWindow_MouseLeave(object sender, MouseEventArgs e)
         {
             _isMouseIn = false;
@@ -447,6 +480,8 @@ namespace LemonLite.Views.Windows
         private void OpenIslandInfoPanel()
         {
             if (_isIslandInfoOpen) return;
+            // 动画锁：停止上一次 InfoPanel 动画（如正在 Close 中）
+            StopInfoPanelAnimation();
             _isIslandInfoOpen = true;
 
             double width = windowRoot.ActualWidth, height = windowRoot.ActualHeight;
@@ -454,6 +489,8 @@ namespace LemonLite.Views.Windows
             double targetHeight = 146d; // InfoPanel的高度
 
             var storyBoard = new Storyboard();
+            _infoPanelStoryboard = storyBoard;
+            _isInfoPanelAnimating = true;
             var widthAnim = new DoubleAnimation(width, targetWidth, TimeSpan.FromMilliseconds(200))
             {
                 EasingFunction = new CubicEase() { EasingMode = EasingMode.EaseOut }
@@ -478,6 +515,8 @@ namespace LemonLite.Views.Windows
 
             storyBoard.Completed += delegate
             {
+                _isInfoPanelAnimating = false;
+                _infoPanelStoryboard = null;
                 windowRoot.HorizontalAlignment = HorizontalAlignment.Stretch;
                 windowRoot.BeginAnimation(WidthProperty, null);
                 windowRoot.BeginAnimation(HeightProperty, null);
@@ -491,6 +530,8 @@ namespace LemonLite.Views.Windows
         private void CloseIslandInfoPanel()
         {
             if (!_isIslandInfoOpen) return;
+            // 动画锁：停止上一次 InfoPanel 动画（如正在 Open 中）
+            StopInfoPanelAnimation();
             _isIslandInfoOpen = false;
 
             if (_hasLyricSource)
@@ -506,6 +547,8 @@ namespace LemonLite.Views.Windows
                 }
 
                 var storyBoard = new Storyboard();
+                _infoPanelStoryboard = storyBoard;
+                _isInfoPanelAnimating = true;
                 var widthAnim = new DoubleAnimation(width, size.Width, TimeSpan.FromMilliseconds(300))
                 {
                     EasingFunction = new CubicEase() { EasingMode = EasingMode.EaseIn }
@@ -534,6 +577,8 @@ namespace LemonLite.Views.Windows
 
                 storyBoard.Completed += delegate
                 {
+                    _isInfoPanelAnimating = false;
+                    _infoPanelStoryboard = null;
                     LrcPanel.Visibility = Visibility.Visible;
                     InfoPanel.Visibility = Visibility.Collapsed;
                     windowRoot.BeginAnimation(WidthProperty, null);
@@ -547,6 +592,21 @@ namespace LemonLite.Views.Windows
                 LrcPanel.Visibility = Visibility.Visible;
                 InfoPanel.Visibility = Visibility.Collapsed;
                 ApplyIslandSize();
+            }
+        }
+
+        /// <summary>停止当前 InfoPanel 动画（动画锁）。</summary>
+        private void StopInfoPanelAnimation()
+        {
+            if (_infoPanelStoryboard != null)
+            {
+                _infoPanelStoryboard.Stop();
+                _infoPanelStoryboard = null;
+                _isInfoPanelAnimating = false;
+                // 清除动画残留，避免属性被冻结在中间值
+                windowRoot.BeginAnimation(WidthProperty, null);
+                windowRoot.BeginAnimation(HeightProperty, null);
+                InfoPanel.BeginAnimation(OpacityProperty, null);
             }
         }
 
@@ -625,6 +685,10 @@ namespace LemonLite.Views.Windows
         {
             if (!_isIslandMode || _isMouseIn) return;
 
+            // 动画锁：若有动画正在执行，则跳过 hotkey 弹出，避免与当前动画冲突
+            //（解决按快捷键时弹出灵动岛跟鼠标悬停效果一样、动画锁不起作用的问题）
+            if (_isLyricAnimating || _isInfoPanelAnimating) return;
+
             // 取消上一次热键触发的延迟关闭
             _hotkeyInfoPanelCts?.Cancel();
             _hotkeyInfoPanelCts = new CancellationTokenSource();
@@ -636,7 +700,8 @@ namespace LemonLite.Views.Windows
             try
             {
                 await Task.Delay(1500, cts.Token);
-                if (!_isMouseIn)
+                // 关闭前再次检查动画状态，避免关闭时干扰正在执行的动画
+                if (!_isMouseIn && !_isLyricAnimating && !_isInfoPanelAnimating)
                     CloseIslandInfoPanel();
             }
             catch (OperationCanceledException) { }

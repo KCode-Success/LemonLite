@@ -172,8 +172,8 @@ public partial class SmtcAppsPage : Page
     {
         var dialog = new Microsoft.Win32.SaveFileDialog
         {
-            Title = "Add SMTC App",
-            Filter = "Executable Files (*.exe)|*.exe|All Files (*.*)|*.*",
+            Title = LocalizationService.Instance["AddSmtcApp"],
+            Filter = LocalizationService.Instance["ExecutableFiles"],
             FileName = "example.exe",
             CheckFileExists = false,
             CheckPathExists = false,
